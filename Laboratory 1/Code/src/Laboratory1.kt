@@ -31,7 +31,7 @@ fun main() {
 
                 // string literal
                 c == '"' -> {
-                    val start = i
+                    val start = index
                     index++
                     while (index < line.length && line[index] != '"') index++
                     if (index < line.length) index++ // consume closing "
@@ -52,17 +52,17 @@ fun main() {
 
                 // number (integer or decimal)
                 c.isDigit() || (c == '.' && index + 1 < line.length && line[index + 1].isDigit()) -> {
-                    val start = i
+                    val start = index
                     var hasDot = false
                     if (c == '.') {
                         hasDot = true
                         index++
                     }
-                    while (i < line.length && line[i].isDigit()) i++
-                    if (index < line.length && line[i] == '.' && !hasDot) {
+                    while (index < line.length && line[index].isDigit()) index++
+                    if (index < line.length && line[index] == '.' && !hasDot) {
                         hasDot = true
                         index++
-                        while (i < line.length && line[i].isDigit()) index++
+                        while (index < line.length && line[index].isDigit()) index++
                     }
                     tokensInLine.add(line.substring(start, index))
                 }
@@ -70,7 +70,7 @@ fun main() {
                 // identifier/keyword
                 c.isLetter() -> {
                     val start = index
-                    while (index < line.length && line[i].isLetterOrDigit()) index++
+                    while (index < line.length && line[index].isLetterOrDigit()) index++
                     tokensInLine.add(line.substring(start, index))
                 }
 
