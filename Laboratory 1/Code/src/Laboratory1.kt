@@ -39,7 +39,7 @@ fun main() {
                 }
 
                 // two-character operators
-                index + 1 < line.length && (line.substring(index, index + 2) in listOf("<=", ">=", "//", "/*", "*/")) -> {
+                index + 1 < line.length && (line.substring(index, index + 2) in listOf("<=", ">=", "==", "//", "/*", "*/")) -> {
                     tokensInLine.add(line.substring(index, index + 2))
                     index += 2
                 }
@@ -90,6 +90,7 @@ fun main() {
                 ";" -> "SEMICOLON"
                 "." -> "PERIOD"
                 "=" -> "EQUAL"
+                "==" -> "RELATIONAL_OPERATOR"
                 "-" -> "MINUS"
                 "+" -> "PLUS"
                 "/" -> "DIVIDE"
@@ -100,9 +101,18 @@ fun main() {
                 ">=" -> "GREATER_EQUAL"
                 "<" -> "LESS"
                 ">" -> "GREATER"
-                "//" -> "COMMENT"
-                "/*" -> "COMMENT"
-                "*/" -> "COMMENT"
+                "//", "/*", "*/" -> "COMMENT"
+                "if" -> "IF_CONDITIONAL"
+                "else" -> "ELSE_CONDITIONAL"
+                "while" -> "WHILE_LOOP"
+                "for" ->  "FOR_LOOP"
+                "fun" -> "FUNCTION_DECLARATION"
+                "return" -> "RETURN_CALL"
+                "nil", "null" -> "NULL"
+                "break", "continue" -> "LOOP_CONTROL"
+                "print" -> "FUNCTION"
+                "and", "or", "not", "!", "&&", "||" -> "LOGICAL_OPERATORS"
+                "true", "false" -> "BOOLEAN"
                 else -> when {
                     lexeme.startsWith("\"") && lexeme.endsWith("\"") -> "STRING"
                     isNumber(lexeme) -> "NUMBER"
