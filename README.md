@@ -58,7 +58,7 @@ Can contain letters, digits, and underscores (_).
 
 Must not start with a digit.
 
-Case-sensitive (myVar and myvar are different identifiers
+Case-sensitive (myVar and myvar are different identifiers)
 
 Comments
 
