@@ -9,14 +9,13 @@ class Token(
 
 fun main() {
     val scanner = Scanner(System.`in`)
-    val myList = mutableListOf<Token>()
-
     println("Enter line(s) of code (press Enter on an empty line to stop):")
 
     var lineNumber = 1
     var multiLineComment = false
+
     while (true) {
-        val line = scanner.nextLine()
+        val line = if (scanner.hasNextLine()) scanner.nextLine() else break
         if (line.isBlank()) break
 
         var index = 0
@@ -29,28 +28,41 @@ fun main() {
                 // whitespace
                 c.isWhitespace() -> index++
 
-                // string literal
+                // string literal with unterminated-string check
                 c == '"' -> {
                     val start = index
                     index++
                     while (index < line.length && line[index] != '"') index++
-                    if (index < line.length) index++ // consume closing "
-                    tokensInLine.add(line.substring(start, index))
+                    if (index >= line.length) {
+                        System.err.println("[line $lineNumber] Error: Unterminated string")
+                        // don't add a STRING token; skip rest of line after the opening quote
+                        break
+                    } else {
+                        index++ // consume closing "
+                        tokensInLine.add(line.substring(start, index))
+                    }
                 }
 
-                // two-character operators
-                index + 1 < line.length && (line.substring(index, index + 2) in listOf("<=", ">=", "==", "//", "/*", "*/")) -> {
-                    tokensInLine.add(line.substring(index, index + 2))
+                // two-character operators (now includes !=, &&, ||)
+                index + 1 < line.length && (line.substring(index, index + 2) in listOf(
+                    "<=", ">=", "==", "!=", "&&", "||", "//", "/*", "*/"
+                )) -> {
+                    val op = line.substring(index, index + 2)
+                    if (op == "//") {
+                        // stop scanning the rest of this line immediately
+                        break
+                    }
+                    tokensInLine.add(op)
                     index += 2
                 }
 
-                // single-character operators and delimiters
-                c in listOf(',', ';', '.', '(', ')', '+', '-', '*', '/', '<', '>','=') -> {
+                // single-character operators and delimiters (added '!')
+                c in listOf(',', ';', '.', '(', ')', '+', '-', '*', '/', '<', '>', '=', '!') -> {
                     tokensInLine.add(c.toString())
                     index++
                 }
 
-                // number (integer or decimal)
+                // number (integer or decimal starting with '.')
                 c.isDigit() || (c == '.' && index + 1 < line.length && line[index + 1].isDigit()) -> {
                     val start = index
                     var hasDot = false
@@ -60,29 +72,48 @@ fun main() {
                     }
                     while (index < line.length && line[index].isDigit()) index++
                     if (index < line.length && line[index] == '.' && !hasDot) {
-                        hasDot = true
-                        index++
-                        while (index < line.length && line[index].isDigit()) index++
+                        // require at least one digit after the dot to count as decimal
+                        if (index + 1 < line.length && line[index + 1].isDigit()) {
+                            hasDot = true
+                            index++
+                            while (index < line.length && line[index].isDigit()) index++
+                        }
                     }
                     tokensInLine.add(line.substring(start, index))
                 }
 
-                // identifier/keyword
-                c.isLetter() -> {
+                // identifier/keyword (allow underscores)
+                c.isLetter() || c == '_' -> {
                     val start = index
-                    while (index < line.length && line[index].isLetterOrDigit()) index++
+                    index++
+                    while (index < line.length && (line[index].isLetterOrDigit() || line[index] == '_')) index++
                     tokensInLine.add(line.substring(start, index))
                 }
 
                 else -> {
-                    // unknown character
-                    tokensInLine.add(c.toString())
+                    // unknown character (report but continue)
+                    System.err.println("[line $lineNumber] Error: Unexpected character '$c'")
                     index++
                 }
             }
         }
 
-        for (lexeme in tokensInLine) {
+        // Map lexemes → token types & emit for THIS line (then EOF), skipping block-comment content
+        var i = 0
+        while (i < tokensInLine.size) {
+            val lexeme = tokensInLine[i]
+
+            // block comment state machine (minimal change: keep your approach)
+            if (lexeme == "/*") {
+                multiLineComment = true
+                i++
+                continue
+            } else if (lexeme == "*/") {
+                multiLineComment = false
+                i++
+                continue
+            }
+
             val type = when (lexeme) {
                 "var" -> "VAR"
                 "val" -> "VAL"
@@ -90,7 +121,9 @@ fun main() {
                 ";" -> "SEMICOLON"
                 "." -> "PERIOD"
                 "=" -> "EQUAL"
-                "==" -> "RELATIONAL_OPERATOR"
+                "==" -> "EQUAL_EQUAL"
+                "!" -> "BANG"
+                "!=" -> "BANG_EQUAL"
                 "-" -> "MINUS"
                 "+" -> "PLUS"
                 "/" -> "DIVIDE"
@@ -101,7 +134,9 @@ fun main() {
                 ">=" -> "GREATER_EQUAL"
                 "<" -> "LESS"
                 ">" -> "GREATER"
-                "//", "/*", "*/" -> "COMMENT"
+                "&&" -> "AND_AND"
+                "||" -> "OR_OR"
+                // comments are handled above; no COMMENT tokens emitted
                 "if" -> "IF_CONDITIONAL"
                 "else" -> "ELSE_CONDITIONAL"
                 "while" -> "WHILE_LOOP"
@@ -111,7 +146,7 @@ fun main() {
                 "nil", "null" -> "NULL"
                 "break", "continue" -> "LOOP_CONTROL"
                 "print" -> "FUNCTION"
-                "and", "or", "not", "!", "&&", "||" -> "LOGICAL_OPERATORS"
+                "and", "or", "not" -> "LOGICAL_OPERATORS"
                 "true", "false" -> "BOOLEAN"
                 else -> when {
                     lexeme.startsWith("\"") && lexeme.endsWith("\"") -> "STRING"
@@ -122,38 +157,28 @@ fun main() {
 
             val literal = when (type) {
                 "NUMBER" -> lexeme
-                "STRING" -> lexeme
+                "STRING" -> lexeme.removePrefix("\"").removeSuffix("\"")
                 else -> "null"
             }
 
-            if (lexeme == "/*") {
-                multiLineComment = true
-            } else if (lexeme == "*/") {
-                multiLineComment = false
-            } else if (lexeme == "//") {
-                break
+            // Only add if not inside a block comment
+            if (!multiLineComment) {
+                println("Token(type=$type , lexeme=$lexeme , literal=$literal , line =$lineNumber)")
             }
 
-            if (type != "COMMENT" && !multiLineComment) {
-                myList.add(
-                    Token(
-                        type = type,
-                        lexeme = lexeme,
-                        literal = literal,
-                        line = lineNumber.toString()
-                    )
-                )
-            }
+            i++
         }
+
+        // Per-line EOF to match lab output
+        println("Token(type=EOF , lexeme= , literal=null , line =$lineNumber)")
 
         lineNumber++
     }
 
-    println("\nAll tokens read:")
-    for (t in myList) {
-        println("Token(Type=${t.type}, Lexeme=${t.lexeme}, Literal=${t.literal}, Line=${t.line})")
+    // If a block comment was never closed, warn once at the end
+    if (multiLineComment) {
+        System.err.println("[line ${lineNumber - 1}] Error: Unterminated block comment (missing */)")
     }
-    println("Token(Type=EOF, Lexeme=, Literal=null, Line=${lineNumber - 1})")
 }
 
 fun isNumber(s: String): Boolean {
@@ -171,5 +196,6 @@ fun isNumber(s: String): Boolean {
             else -> return false
         }
     }
-    return digitSeen
+    // Allow forms like "123", "123.45", ".5" (but not just ".")
+    return digitSeen && !(s == ".")
 }
