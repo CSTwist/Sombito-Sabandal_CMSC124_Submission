@@ -1,5 +1,7 @@
-[Cobra]
+## Cobra
+
 Creator
+
 [Sherwin Paul Sabandal, Chakinzo Sombito]
 
 Language Overview
@@ -76,7 +78,7 @@ Blocks are enclosed in braces { ... }.
 Parentheses () are used for grouping expressions and control flow conditions.
 
 Sample Code
-
+```
 var x = 10;  
 val pi = 3.14;  
 
@@ -92,9 +94,10 @@ for (var i = 0; i < 3; i = i + 1) {
 
 fun greet(name) {  
     print "Hello, " + name;  
-}  
+}
 
-greet("World");  
+greet("World");
+```
 Design Rationale
 [Explain the reasoning behind your design choices]
 Dynamic typing: simplifies the language and accelerates prototyping.
