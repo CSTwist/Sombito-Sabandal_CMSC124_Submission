@@ -101,7 +101,8 @@ fun greet(name) {
 greet("World");
 ```
 Design Rationale
-[Explain the reasoning behind your design choices]
+
+
 Dynamic typing: simplifies the language and accelerates prototyping.
 
 Kotlin-inspired syntax: familiar and modern, but simplified for easier use.
