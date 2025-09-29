@@ -82,7 +82,7 @@ fun main() {
                     tokensInLine.add(line.substring(start, index))
                 }
 
-                // identifier/keyword (allow underscores)
+                // identifier/keyword
                 c.isLetter() || c == '_' -> {
                     val start = index
                     index++
@@ -91,19 +91,18 @@ fun main() {
                 }
 
                 else -> {
-                    // unknown character (report but continue)
+                    // unknown character
                     System.err.println("[line $lineNumber] Error: Unexpected character '$c'")
                     index++
                 }
             }
         }
 
-        // Map lexemes → token types & emit for THIS line (then EOF), skipping block-comment content
+
         var i = 0
         while (i < tokensInLine.size) {
             val lexeme = tokensInLine[i]
 
-            // block comment state machine (minimal change: keep your approach)
             if (lexeme == "/*") {
                 multiLineComment = true
                 i++
@@ -169,7 +168,6 @@ fun main() {
             i++
         }
 
-        // Per-line EOF to match lab output
         println("Token(type=EOF , lexeme= , literal=null , line =$lineNumber)")
 
         lineNumber++
@@ -197,5 +195,5 @@ fun isNumber(s: String): Boolean {
         }
     }
     // Allow forms like "123", "123.45", ".5" (but not just ".")
-    return digitSeen && !(s == ".")
+    return digitSeen && s != "."
 }
