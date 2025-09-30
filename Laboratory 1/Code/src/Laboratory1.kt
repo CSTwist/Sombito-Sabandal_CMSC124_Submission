@@ -17,7 +17,6 @@ fun main() {
     println("Enter your code. Press ENTER for a new line. Submit with an empty line. Quit with :q / :quit.")
 
     while (true) {
-        print("$lineNumber> ")
         if (!scanner.hasNextLine()) break
         val raw = scanner.nextLine()
         val cmd = raw.trim()
