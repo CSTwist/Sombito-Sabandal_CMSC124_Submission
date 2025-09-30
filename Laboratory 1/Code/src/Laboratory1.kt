@@ -9,7 +9,7 @@ class Token(
 
 fun main() {
     val scanner = Scanner(System.`in`)
-    println("Enter line(s) of code (press Enter on an empty line to stop):")
+    println(">")
 
     var lineNumber = 1
     var multiLineComment = false
