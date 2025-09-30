@@ -1,12 +1,5 @@
 import java.util.Scanner
 
-class Token(
-    var type: String = "",
-    var lexeme: String = "",
-    var literal: String = "",
-    var line: String = ""
-)
-
 fun main() {
     val scanner = Scanner(System.`in`)
 
