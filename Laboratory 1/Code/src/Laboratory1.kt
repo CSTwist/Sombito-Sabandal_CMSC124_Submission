@@ -153,9 +153,6 @@ fun tokenizeBlock(lines: List<String>, startingCommentState: Boolean): Boolean {
             }
             i++
         }
-
-        println("Token(type=EOF , lexeme= , literal=null , line =$lineNumber)")
-
         lineNumber++
     }
 
