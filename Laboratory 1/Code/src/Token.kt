@@ -1,6 +1,6 @@
 class Token(
-    var type: String = "",
+    var type: TokenType,
     var lexeme: String = "",
-    var literal: String = "",
-    var line: String = ""
+    var literal: String ?= "",
+    var line: Int
 )
