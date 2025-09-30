@@ -7,15 +7,13 @@ fun main() {
     var lineNumber = 1
     var multiLineComment = false
 
-    println("Enter your code. Press ENTER for a new line. Submit with an empty line. Quit with :q / :quit.")
+    println("Enter your code. Press ENTER for a new line. Submit with an empty line")
 
     while (true) {
         if (!scanner.hasNextLine()) break
         val raw = scanner.nextLine()
         val cmd = raw.trim()
 
-        // quit immediately
-        if (cmd == ":q" || cmd == ":quit") break
 
         // end + evaluate block, then exit program
         if (raw.isBlank()) {
@@ -29,6 +27,7 @@ fun main() {
         buffer.add(raw)
         lineNumber++
     }
+    main()
 }
 
 fun tokenizeBlock(lines: List<String>, startingCommentState: Boolean): Boolean {
