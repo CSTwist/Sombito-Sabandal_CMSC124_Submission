@@ -1,10 +1,10 @@
-## Cobra
+# Cobra
 
 Creator
 
 [Sherwin Paul Sabandal, Chakinzo Sombito]
 
-# Language Overview
+## Language Overview
 Cobra is a simple, dynamically typed programming language inspired by Kotlin and the C family of languages.
 It is designed for learning and prototyping language implementation concepts (scanner → parser → interpreter).
 The language emphasizes simplicity, readability, and feasibility for a semester-long project.
