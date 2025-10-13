@@ -19,6 +19,42 @@ object Tokenizer {
         }
     }
 
+    // --- NEW: return tokens for the parser (no printing) ---
+    fun tokenizeToTokens(lines: List<String>): List<Token> {
+        val out = mutableListOf<Token>()
+        var multiLineComment = false
+        var lineNumber = 1
+
+        for (line in lines) {
+            val lexemes = scanLine(line, lineNumber) // uses your existing private helper
+            var i = 0
+            while (i < lexemes.size) {
+                val lex = lexemes[i]
+
+                // block comment state
+                if (lex == "/*") { multiLineComment = true; i++; continue }
+                if (lex == "*/") { multiLineComment = false; i++; continue }
+                if (multiLineComment) { i++; continue }
+
+                val type = classifyLexeme(lex)
+                val literal = extractLiteral(type, lex)
+                out.add(Token(type, lex, literal, lineNumber))
+                i++
+            }
+            lineNumber++
+        }
+
+        // Always end with EOF on the last processed line
+        out.add(Token(TokenType.EOF, "", null, (lineNumber - 1).coerceAtLeast(1)))
+
+        if (multiLineComment) {
+            System.err.println("[line ${lineNumber - 1}] Error: Unterminated block comment (missing */)")
+        }
+
+        return out
+    }
+
+
     // Scan one line into raw lexemes
     private fun scanLine(line: String, lineNumber: Int): MutableList<String> {
         val tokens = mutableListOf<String>()

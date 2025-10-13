@@ -23,7 +23,17 @@ fun main() {
             }
             ":run" -> {
                 if (buffer.isNotEmpty()) {
-                    Tokenizer.tokenizeBlock(buffer) // no more boolean
+                    // 1) scanner: collect tokens (no printing)
+                    val tokens = Tokenizer.tokenizeToTokens(buffer)
+
+                    // 2) parser: build AST
+                    val parser = Parser(tokens)
+                    val expr = parser.parse()
+
+                    // 3) AST printer: show the parsed structure
+                    val printed = AstPrinter().print(expr)
+                    println(printed)
+
                     buffer.clear()
                 } else {
                     println("[run] Buffer is empty.")
