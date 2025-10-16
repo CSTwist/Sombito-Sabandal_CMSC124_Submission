@@ -1,4 +1,4 @@
-# Cobra
+# CoA
 
 Creator
 
@@ -10,36 +10,45 @@ It is designed for learning and prototyping language implementation concepts (sc
 The language emphasizes simplicity, readability, and feasibility for a semester-long project.
 
 Keywords
-var — Declare a mutable variable
+lagay — declare a mutable variable (like var)
 
-val — Declare an immutable variable
+peg — declare an immutable variable (your “fixed peg”; like val)
 
-if — Conditional branching
+kung — conditional (if)
 
-else — Alternative branch for if
+kundi — else branch
 
-while — Loop construct
+habang — loop while condition is true
 
-for — Loop construct with initialization, condition, and increment
+para — C-style for loop (init; cond; step)
 
-fun — Function declaration
+ganap — function declaration
 
-return — Exit from a function and optionally return a value
+balik — return from a function (optionally with value)
 
-true — Boolean literal (true)
+yass — boolean literal true
 
-false — Boolean literal (false)
+noh — boolean literal false
 
-null — Null literal
+wala — null literal
 
-print — Built-in function to output values
+chika — built-in print/log to output values
 
 Operators
-Arithmetic: + - * /
 
+Arithmetic: + - * / %
 Comparison: < <= > >= == !=
+Logical (symbolic): ! && ||
+Logical (word aliases):
 
-Logical: ! && ||
+hindi (prefix) → logical NOT (e.g., hindi x)
+
+tsaka (infix) → logical AND (e.g., a tsaka b)
+
+or (infix) → logical OR (e.g., a or b)
+Assignment: = (plus optional += -= *= /= %=)
+Concatenate (optional): ++ for strings (e.g., "hi" ++ name)
+
 
 Assignment: =
 
@@ -81,24 +90,35 @@ Parentheses () are used for grouping expressions and control flow conditions.
 
 Sample Code
 ```
-var x = 10;  
-val pi = 3.14;  
+ganap main() {
+    chika("Hi, bes!");
+    
+    peg greeting = "As in hello, world!";
+    lagay count = 0;
 
-if (x > 5) {  
-    print "x is greater than 5";  
-} else {  
-    print "x is 5 or less";  
-}  
+    chika(greeting);
 
-for (var i = 0; i < 3; i = i + 1) {  
-    print i;  
-}  
+    kung (count == 0 tsaka yass) {
+        chika("fresh pa tayo");
+    } kundi {
+        chika("medyo pagod na");
+    }
 
-fun greet(name) {  
-    print "Hello, " + name;  
+    para (lagay i = 0; i < 3; i = i + 1) {
+        chika("count: " + i);
+    }
+
+    habang (hindi (count >= 5) or yass) {
+        count = count + 1;
+        chika("progress: " + count);
+        kung (count > 6) {
+            balik wala;
+        }
+    }
+
+    balik 0;
 }
 
-greet("World");
 ```
 Design Rationale
 
@@ -114,3 +134,117 @@ Minimal features: chosen to be feasible in a 3-month course.
 Error handling: built into the scanner to detect invalid tokens, unterminated strings, and comments.
 
 Educational motivation: emphasizes learning how real languages tokenize, parse, and interpret code rather than creating a production-ready language.
+
+
+PROGRAM STRUCTURE:
+
+```
+Program        ::= { TopLevelDecl } EOF ;
+
+TopLevelDecl   ::= FunDecl
+                 | VarDecl
+                 | ConstDecl
+                 | Statement ;
+
+FunDecl        ::= "ganap" IDENTIFIER "(" [ ParamList ] ")" Block ;
+ParamList      ::= IDENTIFIER { COMMA IDENTIFIER } ;
+
+VarDecl        ::= "lagay" IDENTIFIER [ EQUAL Expression ] SEMICOLON ;
+ConstDecl      ::= "peg"   IDENTIFIER [ EQUAL Expression ] SEMICOLON ;
+
+```
+
+
+```
+Statement      ::= ExprStmt
+                 | PrintStmt
+                 | ReturnStmt
+                 | IfStmt
+                 | WhileStmt
+                 | ForStmt
+                 | Block ;
+
+Block          ::= LEFT_BRACE { Statement } RIGHT_BRACE ;
+
+ExprStmt       ::= Expression SEMICOLON ;
+
+PrintStmt      ::= "chika" "(" [ ArgList ] ")" SEMICOLON ;
+
+ReturnStmt     ::= "balik" [ Expression ] SEMICOLON ;
+
+IfStmt         ::= "kung" "(" Expression ")" Statement [ "kundi" Statement ] ;
+
+WhileStmt      ::= "habang" "(" Expression ")" Statement ;
+
+ForStmt        ::= "para" "(" ForInit ForCond ForStep ")" Statement ;
+
+ForInit        ::= VarDecl
+                 | ConstDecl
+                 | [ Expression ] SEMICOLON ;
+ForCond        ::= [ Expression ] SEMICOLON ;
+ForStep        ::= [ Expression ] ;
+
+```
+
+```
+Expression     ::= Assignment ;
+
+Assignment     ::= LogicOr
+                 | LValue AssignOp Assignment ;
+
+LValue         ::= Primary { Member } ;
+Member         ::= PERIOD IDENTIFIER
+                 | CallArgs ;
+
+AssignOp       ::= EQUAL
+                 | PLUS_EQUAL | MINUS_EQUAL | STAR_EQUAL | DIVIDE_EQUAL | MODULO_EQUAL ;
+
+CallArgs       ::= "(" [ ArgList ] ")" ;
+ArgList        ::= Expression { COMMA Expression } ;
+
+```
+
+```
+LogicOr        ::= LogicAnd { (OR_OR | "or") LogicAnd } ;
+```
+
+```
+LogicAnd       ::= Equality { (AND_AND | "tsaka") Equality } ;
+```
+
+```
+Equality       ::= Comparison { (EQUAL_EQUAL | BANG_EQUAL) Comparison } ;
+
+Comparison     ::= Concat { (LESS | LESS_EQUAL | GREATER | GREATER_EQUAL) Concat } ;
+
+```
+
+```
+Concat         ::= Term { CONCAT Term } ;
+```
+
+```
+Term           ::= Factor { (PLUS | MINUS) Factor } ;
+
+Factor         ::= Unary { (STAR | DIVIDE | MODULO) Unary } ;
+
+Unary          ::= (BANG | "hindi" | MINUS) Unary
+                 | Postfix ;
+```
+
+```
+Postfix        ::= Primary { Member } ;
+```
+
+```
+Primary        ::= IDENTIFIER
+                 | NUMBER
+                 | STRING
+                 | "yass"        // true
+                 | "noh"         // false
+                 | "wala"        // null
+                 | "(" Expression ")" ;
+```
+
+
+
