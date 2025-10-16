@@ -1,23 +1,35 @@
 class KeywordClassifier : LexemeClassifier {
+    // Conyo-flavored keyword table (with a few legacy fallbacks)
     private val keywords = mapOf(
-        "var" to TokenType.VAR,
-        "val" to TokenType.VAL,
-        "if" to TokenType.IF_CONDITIONAL,
-        "else" to TokenType.ELSE_CONDITIONAL,
-        "while" to TokenType.WHILE_LOOP,
-        "for" to TokenType.FOR_LOOP,
-        "fun" to TokenType.FUNCTION_DECLARATION,
-        "return" to TokenType.RETURN_CALL,
-        "print" to TokenType.FUNCTION,
-        "true" to TokenType.BOOLEAN,
-        "false" to TokenType.BOOLEAN,
-        "nil" to TokenType.NULL,
-        "null" to TokenType.NULL,
-        "break" to TokenType.LOOP_CONTROL,
-        "continue" to TokenType.LOOP_CONTROL,
-        "and" to TokenType.LOGICAL_OPERATORS,
-        "or" to TokenType.LOGICAL_OPERATORS,
-        "not" to TokenType.LOGICAL_OPERATORS
+        // Vars
+        "lagay" to TokenType.VAR,                 // mutable (var)
+        "peg" to TokenType.VAL,                   // immutable (val)
+
+        // Conditionals
+        "kung" to TokenType.IF_CONDITIONAL,       // if
+        "kundi" to TokenType.ELSE_CONDITIONAL,    // else
+
+        // Loops
+        "habang" to TokenType.WHILE_LOOP,         // while
+        "para" to TokenType.FOR_LOOP,             // for
+
+        // Functions
+        "ganap" to TokenType.FUNCTION_DECLARATION,// fun
+        "balik" to TokenType.RETURN_CALL,         // return
+        "chika" to TokenType.FUNCTION,            // print/log
+
+        // Literals
+        "yass" to TokenType.BOOLEAN,              // true
+        "noh" to TokenType.BOOLEAN,               // false
+        "wala" to TokenType.NULL,                 // null
+
+        // Word logical operators
+        "hindi" to TokenType.NOT_WORD,   // NOT
+        "tsaka" to TokenType.AND_WORD,   // AND
+        "or" to TokenType.OR_WORD,       // OR (kept as-is)
+
+
+
     )
 
     override fun matches(lexeme: String) = keywords.containsKey(lexeme)
