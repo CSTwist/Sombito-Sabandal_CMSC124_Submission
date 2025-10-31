@@ -40,7 +40,7 @@ Aray Structured Data Type.
 |Arithmetic | + - * / % |
 |Relational |   < <= > >= == != |
 |Logical (symbolic) | ! && || |
-|Logical (word aliases) | 1) hindi (prefix) → logical NOT (e.g., hindi x) 2) tsaka (infix) → logical AND (e.g., a tsaka b) 3) or (infix) → logical OR (e.g., a or b) |
+|Logical (word aliases) | 1) hindi (prefix) → logical NOT (e.g., hindi x) <br>2) tsaka (infix) → logical AND (e.g., a tsaka b) <br>3) or (infix) → logical OR (e.g., a or b) |
 |Assignment | = += -= *= /= %= |
 |Increment | ++ |
 |Decrement | -- |
@@ -50,15 +50,13 @@ Aray Structured Data Type.
 |Comma | , |
 
 ## Literals
-Numbers: integers (42), float (3.14, .5, 0.3333333), and double (3.14159265358979323, .14159265358979323).
-
-Strings: enclosed in double quotes "hello". Supports escape sequences \", \\, \n, \t, \r.
-
-Characters: enclosed in single quotes 'c'.
-
-Booleans: yass, noh.
-
-Null: wala.
+| Type | Description |
+|------|-------------|
+| Numbers | integers (42), float (3.14, .5, 0.3333333), and double (3.14159265358979323, .14159265358979323) |
+| Strings | enclosed in double quotes "hello". Supports escape sequences \", \\, \n, \t, \r. |
+| Characters | enclosed in single quotes, 'c' |
+| Booleans | yass, noh. |
+| Null | wala.|
 
 ## Identifiers
 1) Can contain letters, digits, and underscores (_).
