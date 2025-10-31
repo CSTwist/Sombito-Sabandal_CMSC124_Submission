@@ -83,8 +83,8 @@ aray Student {
 ## Identifiers
 1) Can contain letters, digits, and underscores (_).
 2) Must not start with a digit.
-3) Must start with OA.
-4) Case-sensitive (OAmyVar and OAmyvar are different identifiers)
+3) Must start with OA_.
+4) Case-sensitive (OA_myVar and OA_myvar are different identifiers)
 
 ## Comments
 1) Single-line: // until the end of the line.
@@ -102,25 +102,25 @@ aray Student {
 ganap main() {
     chika("Hi, bes!");
     
-    peg OAgreeting = "As in hello, world!";
-    lagay OAcount = 0;
+    peg OA_greeting = "As in hello, world!";
+    lagay OA_count = 0;
 
-    chika(OAgreeting);
+    chika(OA_greeting);
 
-    kung (OAcount == 0 tsaka yass) {
+    kung (OA_count == 0 tsaka yass) {
         chika("fresh pa tayo");
     } kundi {
         chika("medyo pagod na");
     }
 
-    para (lagay i = 0; OAi < 3; OAi = OAi + 1) {
-        chika("count: " + OAi);
+    para (lagay i = 0; OA_i < 3; OA_i = OA_i + 1) {
+        chika("count: " + OA_i);
     }
 
-    habang (hindi (OAcount >= 5) or yass) {
-        OAcount = OAcount + 1;
-        chika("progress: " + OAcount);
-        kung (OAcount > 6) {
+    habang (hindi (OA_count >= 5) or yass) {
+        OA_count = OA_count + 1;
+        chika("progress: " + OA_count);
+        kung (OA_count > 6) {
             balik wala;
         }
     }
