@@ -5,86 +5,72 @@
 [Sherwin Paul Sabandal, Chakinzo Sombito]
 
 ## Language Overview
-CoA is an imperative, procedural programming language.
+The CoA programming is a programming language built for simplicity. It is influenced by the C programming language. As such, there are some similarities in syntax with C. However, it has several functionalities that are different from C. In particular, CoA is dynamic and strongly typed in contrast to C which is static and weakly typed. Another difference is CoA’s introduction of the Aray structured data type. 
 
 ## Keywords
-lagay — declare a mutable variable (like var)
-
-peg — declare an immutable variable (your “fixed peg”; like val)
-
-kung — conditional (if)
-
-kundi — else branch
-
-habang — loop while condition is true
-
-para — C-style for loop (init; cond; step)
-
-ganap — function declaration
-
-balik — return from a function (optionally with value)
-
-yass — boolean literal true
-
-noh — boolean literal false
-
-wala — null literal
-
-chika — built-in print/log to output values
+lagay	                declare a mutable variable
+peg	                    declare an immutable variable
+enum	                Enumeration
+kung	                conditional (if)
+kungdi	                conditional (else if)
+kundi	                else branch
+baylo	                Switch. Executes one block of code among many options based on an expression’s value
+kaso	                Defines a branch in a switch(baylo) statement.
+habang	                loop while condition is true
+para	                C-style for loop (init; cond; step)
+padayon	                Skips the rest of the loop body and moves to the next iteration.
+guba	                break; Exits loops and the switch statement
+ganap	                function declaration
+balik	                return from a function (optionally with value)
+kadto	                Jumps to a labeled statement in the same function
+void	                Specifies that a function returns no value or that a pointer has no specific type.
+yass(true), noh(false)	Boolean Literals
+wala	                Null Literal
+chika	                built-in print/log to output values
 
 ## Operators
-
 Arithmetic: + - * / %
-Comparison: < <= > >= == !=
+Relational: < <= > >= == !=
 Logical (symbolic): ! && ||
 Logical (word aliases):
-
-hindi (prefix) → logical NOT (e.g., hindi x)
-
-tsaka (infix) → logical AND (e.g., a tsaka b)
-
-or (infix) → logical OR (e.g., a or b)
-Assignment: = (plus optional += -= *= /= %=)
-Concatenate (optional): ++ for strings (e.g., "hi" ++ name)
-
-
-Assignment: =
-
-Delimiters: ( ) { } , ; .
+    hindi (prefix) → logical NOT (e.g., hindi x)
+    tsaka (infix) → logical AND (e.g., a tsaka b)
+    or (infix) → logical OR (e.g., a or b)
+Assignment: = += -= *= /= %=
+Increment: ++
+Decrement: --
+Bitwise: & ` ^ ~ << >>
+Conditional Ternary: ?:
+Special: sizeof, ., ->, &, *
+Comma: ,
 
 ## Literals
-Numbers: integers (42) and decimals (3.14, .5).
+Numbers: integers (42), float (3.14, .5, 0.3333333), and double (3.14159265358979323, .14159265358979323).
 
 Strings: enclosed in double quotes "hello". Supports escape sequences \", \\, \n, \t, \r.
 
-Booleans: true, false.
+Characters: enclosed in single quotes 'c'.
 
-Null: null.
+Booleans: yass, noh.
+
+Null: wala.
 
 ## Identifiers
-
-Can contain letters, digits, and underscores (_).
-
-Must not start with a digit.
-
-Case-sensitive (myVar and myvar are different identifiers)
+1) Can contain letters, digits, and underscores (_).
+2) Must not start with a digit.
+3) Must start with OA.
+4) Case-sensitive (OAmyVar and OAmyvar are different identifiers)
 
 ## Comments
-
-Single-line: // until the end of the line.
-
-Block: /* ... */, may span multiple lines.
-
-Nested block comments are not supported.
+1) Single-line: // until the end of the line.
+2) Block: /* ... */, may span multiple lines.
+3) Nested block comments are not supported.
 
 ## Syntax Style
-Whitespace is not significant except to separate tokens.
-
-Statements are terminated by a semicolon (;).
-
-Blocks are enclosed in braces { ... }.
-
-Parentheses () are used for grouping expressions and control flow conditions.
+1) Whitespace is not significant except to separate tokens.
+2) Statements are terminated by a semicolon (;).
+3) Blocks are enclosed in braces { ... }.
+4) Parentheses () are used for grouping expressions and control flow conditions.
 
 ## Sample Code
 ```
@@ -118,7 +104,7 @@ ganap main() {
 }
 
 ```
-##     Design Rationale
+## Design Rationale
 
 
 Dynamic typing: simplifies the language and accelerates prototyping.
