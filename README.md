@@ -11,22 +11,39 @@ The CoA programming is a programming language built for simplicity. It is influe
 lagay	                declare a mutable variable
 
 peg	                    declare an immutable variable
+
 enum	                Enumeration
+
 kung	                conditional (if)
+
 kungdi	                conditional (else if)
+
 kundi	                else branch
+
 baylo	                Switch. Executes one block of code among many options based on an expression’s value
+
 kaso	                Defines a branch in a switch(baylo) statement.
+
 habang	                loop while condition is true
+
 para	                C-style for loop (init; cond; step)
+
 padayon	                Skips the rest of the loop body and moves to the next iteration.
+
 guba	                break; Exits loops and the switch statement
+
 ganap	                function declaration
+
 balik	                return from a function (optionally with value)
+
 kadto	                Jumps to a labeled statement in the same function
+
 void	                Specifies that a function returns no value or that a pointer has no specific type.
+
 yass(true), noh(false)	Boolean Literals
+
 wala	                Null Literal
+
 chika	                built-in print/log to output values
 
 ## Operators
