@@ -9,6 +9,7 @@ The CoA programming is a programming language built for simplicity. It is influe
 
 ## Keywords
 lagay	                declare a mutable variable
+
 peg	                    declare an immutable variable
 enum	                Enumeration
 kung	                conditional (if)
