@@ -10,6 +10,28 @@ The CoA programming langauge is a language built for simplicity. It is influence
 Aray Structured Data Type.
 	The aray structured data type is a combination of the C array and struct. Additionally, it can also be heterogenous. Arays can also be declared within an aray. It can be declared with indices – which indicates the maximum number of variables it can store.
 
+DECLARATION:
+lagay arayName[max_variables] {variable declerations} 
+
+EXAMPLES
+1)
+aray Student {
+    lagay variableName;
+//or
+    lagay arayName[max_indices]{};
+//or
+    lagay arayName{};
+    …
+};
+
+2)
+aray Student {
+    lagay name[50]{};
+    lagay details{
+        lagay age;
+        lagay grade;
+    }    
+};
 
 ## Keywords
 | Keywords | Description |
@@ -126,18 +148,26 @@ Educational motivation: emphasizes learning how real languages tokenize, parse, 
 PROGRAM STRUCTURE:
 
 ```
-Program        ::= { TopLevelDecl } EOF ;
-
+Program        ::= { TopLevelDecl } EOF
 TopLevelDecl   ::= FunDecl
                  | VarDecl
                  | ConstDecl
-                 | Statement ;
+                 | ArayDecl
+                 | EnumDecl
+                 | Statement
 
-FunDecl        ::= "ganap" IDENTIFIER "(" [ ParamList ] ")" Block ;
-ParamList      ::= IDENTIFIER { COMMA IDENTIFIER } ;
+FunDecl        ::= "ganap" IDENTIFIER "(" [ ParamList ] ")" Block
+ParamList      ::= IDENTIFIER { "," IDENTIFIER }
 
-VarDecl        ::= "lagay" IDENTIFIER [ EQUAL Expression ] SEMICOLON ;
-ConstDecl      ::= "peg"   IDENTIFIER [ EQUAL Expression ] SEMICOLON ;
+VarDecl        ::= "lagay" IDENTIFIER [ "=" Expression ] ";"
+ConstDecl      ::= "peg" IDENTIFIER [ "=" Expression ] ";"
+
+ArayDecl       ::= "aray" IDENTIFIER "{" { ArayMember } "}" ";"
+ArayMember     ::= DataType IDENTIFIER [ "[" NUMBER "]" ] ";"
+                 | "aray" IDENTIFIER [ "[" NUMBER "]" ] ";"
+
+EnumDecl       ::= "enum" IDENTIFIER "{" EnumList "}" ";"
+EnumList       ::= IDENTIFIER { "," IDENTIFIER }
 
 ```
 
@@ -149,42 +179,43 @@ Statement      ::= ExprStmt
                  | IfStmt
                  | WhileStmt
                  | ForStmt
-                 | Block ;
+                 | SwitchStmt
+                 | BreakStmt
+                 | ContinueStmt
+                 | Block
 
-Block          ::= LEFT_BRACE { Statement } RIGHT_BRACE ;
+Block          ::= "{" { Statement } "}"
 
-ExprStmt       ::= Expression SEMICOLON ;
+ExprStmt       ::= Expression ";"
+PrintStmt      ::= "chika" "(" [ ArgList ] ")" ";"
+ReturnStmt     ::= "balik" [ Expression ] ";"
 
-PrintStmt      ::= "chika" "(" [ ArgList ] ")" SEMICOLON ;
+IfStmt         ::= "kung" "(" Expression ")" Statement
+                   { "kungdi" "(" Expression ")" Statement }
+                   [ "kundi" Statement ]
 
-ReturnStmt     ::= "balik" [ Expression ] SEMICOLON ;
+SwitchStmt     ::= "baylo" "(" Expression ")" "{"
+                     { "kaso" Constant ":" { Statement } }
+                     [ "kundi" ":" { Statement } ]
+                   "}"
 
-IfStmt         ::= "kung" "(" Expression ")" Statement [ "kundi" Statement ] ;
+WhileStmt      ::= "habang" "(" Expression ")" Statement
 
-WhileStmt      ::= "habang" "(" Expression ")" Statement ;
+ForStmt        ::= "para" "(" ForInit ForCond ForStep ")" Statement
+ForInit        ::= VarDecl | ConstDecl | [ Expression ] ";"
+ForCond        ::= [ Expression ] ";"
+ForStep        ::= [ Expression ]
 
-ForStmt        ::= "para" "(" ForInit ForCond ForStep ")" Statement ;
-
-ForInit        ::= VarDecl
-                 | ConstDecl
-                 | [ Expression ] SEMICOLON ;
-ForCond        ::= [ Expression ] SEMICOLON ;
-ForStep        ::= [ Expression ] ;
+BreakStmt      ::= "guba" ";"
+ContinueStmt   ::= "padayon" ";"
+GotoStmt       ::= "kadto" IDENTIFIER ";"
 
 ```
 
 ```
-Expression     ::= Assignment ;
-
-Assignment     ::= LogicOr
-                 | LValue AssignOp Assignment ;
-
-LValue         ::= Primary { Member } ;
-Member         ::= PERIOD IDENTIFIER
-                 | CallArgs ;
-
-AssignOp       ::= EQUAL
-                 | PLUS_EQUAL | MINUS_EQUAL | STAR_EQUAL | DIVIDE_EQUAL | MODULO_EQUAL ;
+Expression     ::= Assignment
+Assignment     ::= LogicOr | LValue AssignOp Assignment
+AssignOp       ::= "=" | "+=" | "-=" | "*=" | "/=" | "%="
 
 CallArgs       ::= "(" [ ArgList ] ")" ;
 ArgList        ::= Expression { COMMA Expression } ;
@@ -192,45 +223,29 @@ ArgList        ::= Expression { COMMA Expression } ;
 ```
 
 ```
-LogicOr        ::= LogicAnd { (OR_OR | "or") LogicAnd } ;
-```
-
-```
-LogicAnd       ::= Equality { (AND_AND | "tsaka") Equality } ;
-```
-
-```
-Equality       ::= Comparison { (EQUAL_EQUAL | BANG_EQUAL) Comparison } ;
-
-Comparison     ::= Concat { (LESS | LESS_EQUAL | GREATER | GREATER_EQUAL) Concat } ;
+LogicOr        ::= LogicAnd { ("||" | "or") LogicAnd }
+LogicAnd       ::= Equality { ("&&" | "tsaka") Equality }
+Equality       ::= Comparison { ("==" | "!=") Comparison }
+Comparison     ::= Term { ("<" | "<=" | ">" | ">=") Term }
+Term           ::= Factor { ("+" | "-") Factor }
+Factor         ::= Unary { ("*" | "/" | "%") Unary }
+Unary          ::= ("!" | "hindi" | "-") Unary | Postfix
 
 ```
 
 ```
-Concat         ::= Term { CONCAT Term } ;
-```
+Postfix        ::= Primary { Member }
+Member         ::= "." IDENTIFIER | CallArgs
+CallArgs       ::= "(" [ ArgList ] ")"
+ArgList        ::= Expression { "," Expression }
 
-```
-Term           ::= Factor { (PLUS | MINUS) Factor } ;
-
-Factor         ::= Unary { (STAR | DIVIDE | MODULO) Unary } ;
-
-Unary          ::= (BANG | "hindi" | MINUS) Unary
-                 | Postfix ;
-```
-
-```
-Postfix        ::= Primary { Member } ;
-```
-
-```
 Primary        ::= IDENTIFIER
                  | NUMBER
                  | STRING
                  | "yass"        // true
                  | "noh"         // false
                  | "wala"        // null
-                 | "(" Expression ")" ;
+                 | "(" Expression ")"
 ```
 
 
