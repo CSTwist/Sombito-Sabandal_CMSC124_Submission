@@ -31,20 +31,20 @@ The CoA programming is a programming language built for simplicity. It is influe
 |chika	   |             built-in print/log to output values |
 
 ## Operators
-Arithmetic: + - * / %
-Relational: < <= > >= == !=
-Logical (symbolic): ! && ||
-Logical (word aliases):
+|Arithmetic | + - * / % |
+|Relational |   < <= > >= == != |
+|Logical (symbolic) | ! && || |
+|Logical (word aliases) |
     hindi (prefix) → logical NOT (e.g., hindi x)
     tsaka (infix) → logical AND (e.g., a tsaka b)
-    or (infix) → logical OR (e.g., a or b)
-Assignment: = += -= *= /= %=
-Increment: ++
-Decrement: --
-Bitwise: & ` ^ ~ << >>
-Conditional Ternary: ?:
-Special: sizeof, ., ->, &, *
-Comma: ,
+    or (infix) → logical OR (e.g., a or b) |
+|Assignment | = += -= *= /= %= |
+|Increment | ++ |
+|Decrement | -- |
+|Bitwise | & ` ^ ~ << >> |
+|Conditional Ternary | ?: |
+|Special | sizeof, ., ->, &, * |
+|Comma | , |
 
 ## Literals
 Numbers: integers (42), float (3.14, .5, 0.3333333), and double (3.14159265358979323, .14159265358979323).
