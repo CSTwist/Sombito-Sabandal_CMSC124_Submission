@@ -1,13 +1,13 @@
 # CoA
 
-Creator
+## Creator
 
 [Sherwin Paul Sabandal, Chakinzo Sombito]
 
 ## Language Overview
 CoA is an imperative, procedural programming language.
 
-Keywords
+## Keywords
 lagay — declare a mutable variable (like var)
 
 peg — declare an immutable variable (your “fixed peg”; like val)
@@ -32,7 +32,7 @@ wala — null literal
 
 chika — built-in print/log to output values
 
-Operators
+## Operators
 
 Arithmetic: + - * / %
 Comparison: < <= > >= == !=
@@ -52,7 +52,7 @@ Assignment: =
 
 Delimiters: ( ) { } , ; .
 
-Literals
+## Literals
 Numbers: integers (42) and decimals (3.14, .5).
 
 Strings: enclosed in double quotes "hello". Supports escape sequences \", \\, \n, \t, \r.
@@ -61,7 +61,7 @@ Booleans: true, false.
 
 Null: null.
 
-Identifiers
+## Identifiers
 
 Can contain letters, digits, and underscores (_).
 
@@ -69,7 +69,7 @@ Must not start with a digit.
 
 Case-sensitive (myVar and myvar are different identifiers)
 
-Comments
+## Comments
 
 Single-line: // until the end of the line.
 
@@ -77,7 +77,7 @@ Block: /* ... */, may span multiple lines.
 
 Nested block comments are not supported.
 
-Syntax Style
+## Syntax Style
 Whitespace is not significant except to separate tokens.
 
 Statements are terminated by a semicolon (;).
@@ -86,7 +86,7 @@ Blocks are enclosed in braces { ... }.
 
 Parentheses () are used for grouping expressions and control flow conditions.
 
-Sample Code
+## Sample Code
 ```
 ganap main() {
     chika("Hi, bes!");
@@ -118,7 +118,7 @@ ganap main() {
 }
 
 ```
-Design Rationale
+##     Design Rationale
 
 
 Dynamic typing: simplifies the language and accelerates prototyping.
