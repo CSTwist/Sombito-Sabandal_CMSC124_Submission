@@ -80,25 +80,25 @@ Aray Structured Data Type.
 ganap main() {
     chika("Hi, bes!");
     
-    peg greeting = "As in hello, world!";
-    lagay count = 0;
+    peg OAgreeting = "As in hello, world!";
+    lagay OAcount = 0;
 
-    chika(greeting);
+    chika(OAgreeting);
 
-    kung (count == 0 tsaka yass) {
+    kung (OAcount == 0 tsaka yass) {
         chika("fresh pa tayo");
     } kundi {
         chika("medyo pagod na");
     }
 
-    para (lagay i = 0; i < 3; i = i + 1) {
-        chika("count: " + i);
+    para (lagay i = 0; OAi < 3; OAi = OAi + 1) {
+        chika("count: " + OAi);
     }
 
-    habang (hindi (count >= 5) or yass) {
-        count = count + 1;
-        chika("progress: " + count);
-        kung (count > 6) {
+    habang (hindi (OAcount >= 5) or yass) {
+        OAcount = OAcount + 1;
+        chika("progress: " + OAcount);
+        kung (OAcount > 6) {
             balik wala;
         }
     }
@@ -112,7 +112,7 @@ ganap main() {
 
 Dynamic typing: simplifies the language and accelerates prototyping.
 
-Kotlin-inspired syntax: familiar and modern, but simplified for easier use.
+C-inspired and Kotlin-inspired syntax: familiar and modern, but simplified for easier use.
 
 Block-style languages, such as C, prepare the language for easy parsing in later stages.
 
