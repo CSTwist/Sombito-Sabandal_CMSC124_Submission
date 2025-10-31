@@ -8,7 +8,7 @@
 The CoA programming is a programming language built for simplicity. It is influenced by the C programming language. As such, there are some similarities in syntax with C. However, it has several functionalities that are different from C. In particular, CoA is dynamic and strongly typed in contrast to C which is static and weakly typed. Another difference is CoA’s introduction of the Aray structured data type. 
 
 ## Keywords
-| Operator | Description |
+| Keywords | Description |
 |----------|-------------|
 | lagay	   |             declare a mutable variable|
 | peg	   |             declare an immutable variable |
@@ -31,6 +31,8 @@ The CoA programming is a programming language built for simplicity. It is influe
 |chika	   |             built-in print/log to output values |
 
 ## Operators
+| Type | Operators |
+|------|-----------|
 |Arithmetic | + - * / % |
 |Relational |   < <= > >= == != |
 |Logical (symbolic) | ! && || |
