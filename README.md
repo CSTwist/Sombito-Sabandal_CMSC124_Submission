@@ -5,7 +5,11 @@
 [Sherwin Paul Sabandal, Chakinzo Sombito]
 
 ## Language Overview
-The CoA programming is a programming language built for simplicity. It is influenced by the C programming language. As such, there are some similarities in syntax with C. However, it has several functionalities that are different from C. In particular, CoA is dynamic and strongly typed in contrast to C which is static and weakly typed. Another difference is CoA’s introduction of the Aray structured data type. 
+The CoA programming langauge is a language built for simplicity. It is influenced by the C programming language. As such, there are some similarities in syntax with C. However, it has several functionalities that are different from C. In particular, CoA is dynamic and strongly typed in contrast to C which is static and weakly typed. Another difference is CoA’s introduction of the Aray structured data type.
+
+Aray Structured Data Type.
+	The aray structured data type is a combination of the C array and struct. Additionally, it can also be heterogenous. Arays can also be declared within an aray. It can be declared with indices – which indicates the maximum number of variables it can store.
+
 
 ## Keywords
 | Keywords | Description |
@@ -36,10 +40,7 @@ The CoA programming is a programming language built for simplicity. It is influe
 |Arithmetic | + - * / % |
 |Relational |   < <= > >= == != |
 |Logical (symbolic) | ! && || |
-|Logical (word aliases) |
-    hindi (prefix) → logical NOT (e.g., hindi x)
-    tsaka (infix) → logical AND (e.g., a tsaka b)
-    or (infix) → logical OR (e.g., a or b) |
+|Logical (word aliases) | 1) hindi (prefix) → logical NOT (e.g., hindi x) 2) tsaka (infix) → logical AND (e.g., a tsaka b) 3) or (infix) → logical OR (e.g., a or b) |
 |Assignment | = += -= *= /= %= |
 |Increment | ++ |
 |Decrement | -- |
