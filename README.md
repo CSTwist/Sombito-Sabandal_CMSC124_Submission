@@ -145,7 +145,7 @@ Error handling: built into the scanner to detect invalid tokens, unterminated st
 Educational motivation: emphasizes learning how real languages tokenize, parse, and interpret code rather than creating a production-ready language.
 
 
-PROGRAM STRUCTURE:
+## Grammar
 
 ```
 Program        ::= { TopLevelDecl } EOF
