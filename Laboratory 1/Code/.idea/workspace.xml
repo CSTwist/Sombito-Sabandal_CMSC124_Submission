@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="52f3ab7f-80ee-41d1-87bb-63ec380e1e9b" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Code.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../Laboratory 2/Code/Code.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/kotlinc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/libraries/KotlinJavaRuntime.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/kotlinc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/kotlinc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/KotlinJavaRuntime.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/KotlinJavaRuntime.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CMSC 124 Lab 1 Scanner.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/AstPrinter.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Expr.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Parser.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Laboratory 1.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/IdentifierClassifier.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/KeywordClassifier.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/LexemeClassifier.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/LiteralClassifier.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/META-INF/Laboratory 1.kotlin_module" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/MainKt.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/OperatorClassifier.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/Token.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/TokenType.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/TokenTypeKt.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/Tokenizer$WhenMappings.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/Tokenizer.class" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "CSTwist"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/CSTwist/Sombito-Sabandal_CMSC124_Submission.git",
+    "accountId": "b76a8059-12c2-4985-a679-70597bf9ed49"
+  }
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 4
+}]]></component>
+  <component name="ProjectId" id="34vNixCQFOFQhzhkGt7sZvdLphM" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Kotlin.MainKt.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
+    "onboarding.tips.debug.path": "C:/Users/Chak/Documents/SUBJECTS/Komsai - Third Year/First Semester/CMSC 124 (LAB)/Sombito-Sabandal_CMSC124_Submission/Laboratory 1/Code/src/Main.kt"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="52f3ab7f-80ee-41d1-87bb-63ec380e1e9b" name="Changes" comment="" />
+      <created>1762090216961</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1762090216961</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="kotlin-line">
+          <url>file://$PROJECT_DIR$/src/Main.kt</url>
+          <line>32</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
