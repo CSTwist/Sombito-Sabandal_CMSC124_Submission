@@ -4,39 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="52f3ab7f-80ee-41d1-87bb-63ec380e1e9b" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Code.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../../Laboratory 2/Code/Code.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../../.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/kotlinc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/libraries/KotlinJavaRuntime.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/kotlinc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/kotlinc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/KotlinJavaRuntime.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/KotlinJavaRuntime.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMSC 124 Lab 1 Scanner.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/AstPrinter.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Expr.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Main.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/Main.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Parser.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Laboratory 1.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/IdentifierClassifier.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/KeywordClassifier.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/LexemeClassifier.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/LiteralClassifier.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/META-INF/Laboratory 1.kotlin_module" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/MainKt.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/OperatorClassifier.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/Token.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/TokenType.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/TokenTypeKt.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/Tokenizer$WhenMappings.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../out/production/Laboratory 1/Tokenizer.class" beforeDir="false" />
+    <list default="true" id="52f3ab7f-80ee-41d1-87bb-63ec380e1e9b" name="Changes" comment="Fixed Separation of every laboratory project">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,6 +54,15 @@
       <option name="presentableId" value="Default" />
       <updated>1762090216961</updated>
     </task>
+    <task id="LOCAL-00001" summary="Fixed Separation of every laboratory project">
+      <option name="closed" value="true" />
+      <created>1762090930666</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1762090930666</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -97,6 +75,10 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Fixed Separation of every laboratory project" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed Separation of every laboratory project" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
