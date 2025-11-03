@@ -7,31 +7,52 @@
 ## Language Overview
 The CoA programming langauge is a language built for simplicity. It is influenced by the C programming language. As such, there are some similarities in syntax with C. However, it has several functionalities that are different from C. In particular, CoA is dynamic and strongly typed in contrast to C which is static and weakly typed. Another difference is CoA’s introduction of the Aray structured data type.
 
+<h1 align="center"> WHAT'S UNIQUE</h1>
+
 Aray Structured Data Type.
 	The aray structured data type is a combination of the C array and struct. Additionally, it can also be heterogenous. Arays can also be declared within an aray. It can be declared with indices – which indicates the maximum number of variables it can store.
 
-DECLARATION:
-lagay arayName[max_variables] {variable declerations} 
+| DECLARATION | DESCRIPTION |
+|-------------|--------------|
+| `lagay arayName[max_variables] {variable declarations}` | Declares an array structure that can contain variables, arrays, or nested arrays. |
 
-EXAMPLES
-1)
+**EXAMPLES:**
+```
+// Example 1
 aray Student {
     lagay variableName;
-//or
-    lagay arayName[max_indices]{};
-//or
-    lagay arayName{};
-    …
+    // or
+    lagay arayName[max_indices] {};
+    // or
+    lagay arayName {};
+    ...
 };
 
-2)
+// Example 2
 aray Student {
-    lagay name[50]{};
-    lagay details{
+    lagay name[50] {};
+    lagay details {
         lagay age;
         lagay grade;
-    }    
+    };
 };
+```
+
+**FUNCTION BEHAVIOR**<br>
+Functions in CoA can specify the return type at the function declaration. If the function returns a different type other than the specified type it does something else. It is like an if-else statement where the "if" is the function and the "else" is the "other" block below the function. You can also omit the other block in which case it returns null. If the return type is unspecified, the other block is not applicable and is syntactically invalid. 
+
+```
+//With other block
+ganap int ADD(){ 
+	//Perform addition operations 
+} other{ 
+	// do something else. Like return a string with an error message 
+} 
+//Without other block 
+fun int ADD(){ 
+	//Perform addition operations 
+}
+```
 
 ## Keywords
 | Keywords | Description |
@@ -49,10 +70,13 @@ aray Student {
 |padayon   |             Skips the rest of the loop body and moves to the next iteration. |
 |guba	   |             break; Exits loops and the switch statement |
 |ganap	   |             function declaration |
+|other	   |             else statement for functions |
 |balik	   |             return from a function (optionally with value) |
 |kadto	   |             Jumps to a labeled statement in the same function |
 |void	   |             Specifies that a function returns no value or that a pointer has no specific type. |
 |yass(true), noh(false) | Boolean Literals |
+|try	   |             Exception handling try statement |
+|catch	   |             catch exceptions |
 |wala	   |             Null Literal |
 |chika	   |             built-in print/log to output values |
 
@@ -145,10 +169,11 @@ Error handling: built into the scanner to detect invalid tokens, unterminated st
 Educational motivation: emphasizes learning how real languages tokenize, parse, and interpret code rather than creating a production-ready language.
 
 
-PROGRAM STRUCTURE:
+## Grammar
 
 ```
 Program        ::= { TopLevelDecl } EOF
+
 TopLevelDecl   ::= FunDecl
                  | VarDecl
                  | ConstDecl
@@ -156,8 +181,10 @@ TopLevelDecl   ::= FunDecl
                  | EnumDecl
                  | Statement
 
-FunDecl        ::= "ganap" IDENTIFIER "(" [ ParamList ] ")" Block
+FunDecl        ::= "ganap" [ DataType ] IDENTIFIER "(" [ ParamList ] ")" Block [ OtherBlock ]
+OtherBlock     ::= "other" Block
 ParamList      ::= IDENTIFIER { "," IDENTIFIER }
+
 
 VarDecl        ::= "lagay" IDENTIFIER [ "=" Expression ] ";"
 ConstDecl      ::= "peg" IDENTIFIER [ "=" Expression ] ";"
@@ -180,12 +207,15 @@ Statement      ::= ExprStmt
                  | WhileStmt
                  | ForStmt
                  | SwitchStmt
+                 | TryCatchStmt
                  | BreakStmt
                  | ContinueStmt
                  | Block
 
+
 Block          ::= "{" { Statement } "}"
 
+TryCatchStmt   ::= "try" Block { "catch" "(" IDENTIFIER ")" Block } [ "finally" Block ]
 ExprStmt       ::= Expression ";"
 PrintStmt      ::= "chika" "(" [ ArgList ] ")" ";"
 ReturnStmt     ::= "balik" [ Expression ] ";"
