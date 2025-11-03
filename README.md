@@ -7,7 +7,7 @@
 ## Language Overview
 The CoA programming langauge is a language built for simplicity. It is influenced by the C programming language. As such, there are some similarities in syntax with C. However, it has several functionalities that are different from C. In particular, CoA is dynamic and strongly typed in contrast to C which is static and weakly typed. Another difference is CoA’s introduction of the Aray structured data type.
 
-<div align="center" fontStyle="Bold"> WHAT'S UNIQUE</div>
+<h1 align="center"> WHAT'S UNIQUE</h1>
 
 Aray Structured Data Type.
 	The aray structured data type is a combination of the C array and struct. Additionally, it can also be heterogenous. Arays can also be declared within an aray. It can be declared with indices – which indicates the maximum number of variables it can store.
