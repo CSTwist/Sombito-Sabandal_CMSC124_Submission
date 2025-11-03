@@ -12,7 +12,8 @@ Aray Structured Data Type.
 
 | DECLARATION | EXAMPLES |
 |-------------|-----------|
-| `lagay arayName[max_variables] {variable declarations}` | 1)<pre><code>
+| `lagay arayName[max_variables] {variable declarations}` | 
+1)<pre><code>
 aray Student {
     lagay variableName;
     // or
