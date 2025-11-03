@@ -16,7 +16,7 @@ Aray Structured Data Type.
 |-------------|--------------|
 | `lagay arayName[max_variables] {variable declarations}` | Declares an array structure that can contain variables, arrays, or nested arrays. |
 
-**Examples:**
+**EXAMPLES:**
 ```
 // Example 1
 aray Student {
@@ -37,7 +37,8 @@ aray Student {
     };
 };
 ```
-**Function Behavior**<br>
+
+**FUNCTION BEHAVIOR**<br>
 Functions in CoA can specify the return type at the function declaration. If the function returns a different type other than the specified type it does something else. It is like an if-else statement where the "if" is the function and the "else" is the "other" block below the function. You can also omit the other block in which case it returns null. If the return type is unspecified, the other block is not applicable and is syntactically invalid. 
 
 ```
@@ -51,8 +52,8 @@ ganap int ADD(){
 fun int ADD(){ 
 	//Perform addition operations 
 }
-
 ```
+
 ## Keywords
 | Keywords | Description |
 |----------|-------------|
@@ -69,10 +70,13 @@ fun int ADD(){
 |padayon   |             Skips the rest of the loop body and moves to the next iteration. |
 |guba	   |             break; Exits loops and the switch statement |
 |ganap	   |             function declaration |
+|other	   |             else statement for functions |
 |balik	   |             return from a function (optionally with value) |
 |kadto	   |             Jumps to a labeled statement in the same function |
 |void	   |             Specifies that a function returns no value or that a pointer has no specific type. |
 |yass(true), noh(false) | Boolean Literals |
+|try	   |             Exception handling try statement |
+|catch	   |             catch exceptions |
 |wala	   |             Null Literal |
 |chika	   |             built-in print/log to output values |
 
