@@ -16,8 +16,8 @@ Aray Structured Data Type.
 |-------------|--------------|
 | `lagay arayName[max_variables] {variable declarations}` | Declares an array structure that can contain variables, arrays, or nested arrays. |
 
-```
 **Examples:**
+```
 // Example 1
 aray Student {
     lagay variableName;
@@ -37,7 +37,8 @@ aray Student {
     };
 };
 ```
-
+**Function Behavior**
+Functions in CoA can specify the return type at the function declaration. If the function returns a different type other than the specified type it does something else. It is like an if-else statement where the "if" is the function and the "else" is the "other" block below the function. You can also omit the other block in which case it returns null. If the return type is unspecified, the other block is not applicable and is syntactically invalid. 
 
 ## Keywords
 | Keywords | Description |
