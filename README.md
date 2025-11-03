@@ -12,7 +12,7 @@ Aray Structured Data Type.
 
 | DECLARATION | EXAMPLES |
 |-------------|----------|
-| lagay arayName[max_variables] {variable declerations} | 1)<br>aray Student {<br>  lagay variableName;<br>//or<br>lagay arayName[max_indices]{};<br>//or<br>lagay arayName{};<br>…<br>};<br>2)<br>aray Student {<br>lagay name[50]{};<br>lagay details{<br>lagay age;<br>lagay grade;<br>}<br>};|
+| lagay arayName[max_variables] {variable declerations} | 1)<br>aray Student {<br>&emsp lagay variableName;<br>//or<br>lagay arayName[max_indices]{};<br>//or<br>lagay arayName{};<br>…<br>};<br>2)<br>aray Student {<br>lagay name[50]{};<br>lagay details{<br>lagay age;<br>lagay grade;<br>}<br>};|
 
 ## Keywords
 | Keywords | Description |
