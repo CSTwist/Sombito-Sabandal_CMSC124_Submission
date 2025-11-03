@@ -3,7 +3,7 @@ class KeywordClassifier : LexemeClassifier {
     private val keywords = mapOf(
         // Vars
         "lagay" to TokenType.VAR,                 // mutable (var)
-        "peg" to TokenType.VAL,                   // immutable (val)
+        "peg" to TokenType.CONST,                   // immutable (val)
 
         // Conditionals
         "kung" to TokenType.IF_CONDITIONAL,       // if
@@ -17,10 +17,11 @@ class KeywordClassifier : LexemeClassifier {
         "ganap" to TokenType.FUNCTION_DECLARATION,// fun
         "balik" to TokenType.RETURN_CALL,         // return
         "chika" to TokenType.FUNCTION,            // print/log
+        "other" to TokenType.OTHER,
 
-        // Literals
-        "yass" to TokenType.BOOLEAN,              // true
-        "noh" to TokenType.BOOLEAN,               // false
+    // Literals
+        "yass" to TokenType.TRUE,              // true
+        "noh" to TokenType.FALSE,               // false
         "wala" to TokenType.NULL,                 // null
 
         // Word logical operators
