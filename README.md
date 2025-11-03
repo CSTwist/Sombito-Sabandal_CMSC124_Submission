@@ -10,20 +10,24 @@ The CoA programming langauge is a language built for simplicity. It is influence
 Aray Structured Data Type.
 	The aray structured data type is a combination of the C array and struct. Additionally, it can also be heterogenous. Arays can also be declared within an aray. It can be declared with indices – which indicates the maximum number of variables it can store.
 
-| DECLARATION | EXAMPLES |
-|-------------|-----------|
-| `lagay arayName[max_variables] {variable declarations}` | 
-1)<pre><code>
+| DECLARATION | DESCRIPTION |
+|-------------|--------------|
+| `lagay arayName[max_variables] {variable declarations}` | Declares an array structure that can contain variables, arrays, or nested arrays. |
+
+**Examples:**
+
+```coa
+// Example 1
 aray Student {
     lagay variableName;
     // or
     lagay arayName[max_indices] {};
     // or
     lagay arayName {};
-    …
+    ...
 };
-</code></pre>
-2)<pre><code>
+
+// Example 2
 aray Student {
     lagay name[50] {};
     lagay details {
@@ -31,7 +35,6 @@ aray Student {
         lagay grade;
     };
 };
-</code></pre> |
 
 
 ## Keywords
