@@ -173,6 +173,7 @@ Educational motivation: emphasizes learning how real languages tokenize, parse, 
 
 ```
 Program        ::= { TopLevelDecl } EOF
+
 TopLevelDecl   ::= FunDecl
                  | VarDecl
                  | ConstDecl
@@ -180,8 +181,10 @@ TopLevelDecl   ::= FunDecl
                  | EnumDecl
                  | Statement
 
-FunDecl        ::= "ganap" IDENTIFIER "(" [ ParamList ] ")" Block
+FunDecl        ::= "ganap" [ DataType ] IDENTIFIER "(" [ ParamList ] ")" Block [ OtherBlock ]
+OtherBlock     ::= "other" Block
 ParamList      ::= IDENTIFIER { "," IDENTIFIER }
+
 
 VarDecl        ::= "lagay" IDENTIFIER [ "=" Expression ] ";"
 ConstDecl      ::= "peg" IDENTIFIER [ "=" Expression ] ";"
@@ -204,12 +207,15 @@ Statement      ::= ExprStmt
                  | WhileStmt
                  | ForStmt
                  | SwitchStmt
+                 | TryCatchStmt
                  | BreakStmt
                  | ContinueStmt
                  | Block
 
+
 Block          ::= "{" { Statement } "}"
 
+TryCatchStmt   ::= "try" Block { "catch" "(" IDENTIFIER ")" Block } [ "finally" Block ]
 ExprStmt       ::= Expression ";"
 PrintStmt      ::= "chika" "(" [ ArgList ] ")" ";"
 ReturnStmt     ::= "balik" [ Expression ] ";"
