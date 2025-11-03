@@ -15,8 +15,6 @@ Aray Structured Data Type.
 | `lagay arayName[max_variables] {variable declarations}` | Declares an array structure that can contain variables, arrays, or nested arrays. |
 
 **Examples:**
-
-```coa
 // Example 1
 aray Student {
     lagay variableName;
