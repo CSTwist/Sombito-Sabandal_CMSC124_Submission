@@ -5,7 +5,7 @@ fun main() {
     val stdin = Scanner(System.`in`)
     val buffer = mutableListOf<String>()
 
-    println("Type/paste code. Commands: ':parse' to parse, ':tokens' to list tokens, ':clear' to reset, ':q' / ':quit' to exit.")
+    println("Type/paste code. Commands: ':parse' to evaluate, ':tokens' to list tokens, ':clear' to reset, ':q' / ':quit' to exit.")
 
     loop@ while (true) {
         print("> ")
@@ -32,9 +32,9 @@ fun main() {
                 continue@loop
             }
 
-            ":parse" -> {
+            ":evaluate" -> {
                 if (buffer.isEmpty()) {
-                    println("[parse] Buffer is empty.")
+                    println("[evaluate] Buffer is empty.")
                     continue@loop
                 }
 
@@ -42,8 +42,13 @@ fun main() {
                 val parser = Parser(tokens)
                 val program = parser.parseProgram()
 
-                println("=== Parsed Program AST ===")
-                AstPrinter().print(program)  // <-- now prints the whole program
+                try {
+                    Evaluator().eval(program)
+                } catch (e: RuntimeError) {
+                    // error already printed; keep REPL alive
+                } catch (e: Return) {
+                    // top-level return isn't meaningful; ignore value but keep REPL stable
+                }
 
                 buffer.clear()
                 continue@loop
