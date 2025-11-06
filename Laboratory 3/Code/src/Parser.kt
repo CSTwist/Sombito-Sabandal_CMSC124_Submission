@@ -12,6 +12,14 @@ class Parser(private val tokens: List<Token>) {
         return Program(decls)
     }
 
+    fun parseExpression(): Expr {
+        val expr = expression()
+        if (!isAtEnd()) {
+            error(peek(), "Unexpected tokens after expression.")
+        }
+        return expr
+    }
+
     // ---- Top-level Declarations ----
     private fun declaration(): Decl {
         return when {
@@ -72,6 +80,7 @@ class Parser(private val tokens: List<Token>) {
         return Decl.FunDecl(returnType, name, params, body, otherBlock)
     }
 
+    // ---- Top-level var/const (returns Decl) ----
 
     // lagay IDENTIFIER [ = Expression ] ;
     private fun varDecl(): Decl.VarDecl {
@@ -93,6 +102,31 @@ class Parser(private val tokens: List<Token>) {
         }
         consume(TokenType.SEMICOLON, "Expect ';' after constant declaration.")
         return Decl.ConstDecl(name, value)
+    }
+
+    // ---- Statement-level var/const (returns Stmt) ----
+
+    // Called when 'lagay' token has already been consumed by match(...)
+    private fun varStatement(): Stmt.VarDecl {
+        val name = consume(TokenType.IDENTIFIER, "Expect variable name after 'lagay'.")
+        var initializer: Expr? = null
+        if (match(TokenType.EQUAL)) {
+            initializer = expression()
+        }
+        consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.")
+        return Stmt.VarDecl(name, initializer)
+    }
+
+    // Called when 'peg' token has already been consumed by match(...)
+    private fun constStatement(): Stmt.VarDecl {
+        // reuse Stmt.VarDecl shape for statement-level const (you might want a separate Stmt.ConstDecl)
+        val name = consume(TokenType.IDENTIFIER, "Expect constant name after 'peg'.")
+        var initializer: Expr? = null
+        if (match(TokenType.EQUAL)) {
+            initializer = expression()
+        }
+        consume(TokenType.SEMICOLON, "Expect ';' after constant declaration.")
+        return Stmt.VarDecl(name, initializer)
     }
 
     // aray IDENTIFIER { ArayMember } ;
@@ -137,6 +171,8 @@ class Parser(private val tokens: List<Token>) {
     // ---- Statements ----
     private fun statement(): Stmt {
         return when {
+            match(TokenType.VAR) -> varStatement()
+            match(TokenType.CONST) -> constStatement()
             match(TokenType.PRINT) -> printStmt()
             match(TokenType.IF_CONDITIONAL) -> ifStmt()
             match(TokenType.WHILE_LOOP) -> whileStmt()
@@ -194,14 +230,8 @@ class Parser(private val tokens: List<Token>) {
 
         // ForInit
         val initializer: Stmt? = when {
-            match(TokenType.VAR) -> {
-                val decl = varDecl()
-                Stmt.ExpressionStmt(Expr.Variable(decl.name)) // or wrap properly
-            }
-            match(TokenType.CONST) -> {
-                val decl = constDecl()
-                Stmt.ExpressionStmt(Expr.Variable(decl.name))
-            }
+            match(TokenType.VAR) -> varStatement()
+            match(TokenType.CONST) -> constStatement()
             !check(TokenType.SEMICOLON) -> exprStmt()
             else -> null
         }
@@ -253,7 +283,7 @@ class Parser(private val tokens: List<Token>) {
 
     private fun assignment(): Expr {
         val expr = logicOr()
-        if (match(TokenType.EQUAL, TokenType.PLUS_EQUAL, TokenType.MINUS_EQUAL, TokenType.STAR_EQUAL, TokenType.DIVIDE_EQUAL)) {
+        if (match(TokenType.EQUAL, TokenType.PLUS_EQUAL, TokenType.MINUS_EQUAL, TokenType.STAR_EQUAL, TokenType.DIVIDE_EQUAL, TokenType.MODULO_EQUAL)) {
             val operator = previous()
             val value = assignment()
             if (expr is Expr.Variable) {

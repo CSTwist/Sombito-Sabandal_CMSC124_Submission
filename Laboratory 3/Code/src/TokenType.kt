@@ -12,12 +12,17 @@ enum class TokenType {
     EQUAL, EQUAL_EQUAL,
     BANG, BANG_EQUAL,
     AND_AND, OR_OR,
-    PLUS_EQUAL, MINUS_EQUAL, STAR_EQUAL, DIVIDE_EQUAL,
+
+    // compound assignment
+    PLUS_EQUAL, MINUS_EQUAL, STAR_EQUAL, DIVIDE_EQUAL, MODULO_EQUAL,
+
+    // increment/decrement
+    PLUS_PLUS, MINUS_MINUS,
 
     // word logical operators
     NOT_WORD, AND_WORD, OR_WORD,
 
-    // keywords
+    // keywords (CoA language)
     VAR, CONST, ARAY, ENUM,
     IF_CONDITIONAL, ELSE_IF_CONDITIONAL, ELSE_CONDITIONAL,
     WHILE_LOOP, FOR_LOOP,
@@ -28,10 +33,10 @@ enum class TokenType {
     STRING, NUMBER, IDENTIFIER,
     TRUE, FALSE, NULL,
 
-    // control
+    // control flow
     BREAK, CONTINUE,
 
-    // end
+    // special
     EOF, INVALID
 }
 
@@ -49,7 +54,7 @@ fun classifyLexeme(lexeme: String): TokenType {
         "[" -> TokenType.LEFT_BRACKET
         "]" -> TokenType.RIGHT_BRACKET
 
-        // operators
+        // arithmetic & operators
         "+" -> TokenType.PLUS
         "-" -> TokenType.MINUS
         "*" -> TokenType.STAR
@@ -65,10 +70,17 @@ fun classifyLexeme(lexeme: String): TokenType {
         "!" -> TokenType.BANG
         "&&" -> TokenType.AND_AND
         "||" -> TokenType.OR_OR
+
+        // compound assignment
         "+=" -> TokenType.PLUS_EQUAL
         "-=" -> TokenType.MINUS_EQUAL
         "*=" -> TokenType.STAR_EQUAL
         "/=" -> TokenType.DIVIDE_EQUAL
+        "%=" -> TokenType.MODULO_EQUAL
+
+        // increment/decrement
+        "++" -> TokenType.PLUS_PLUS
+        "--" -> TokenType.MINUS_MINUS
 
         // keywords (CoA)
         "lagay" -> TokenType.VAR
@@ -94,9 +106,16 @@ fun classifyLexeme(lexeme: String): TokenType {
         "or" -> TokenType.OR_WORD
 
         else -> when {
+            // numeric literals (int or float)
             lexeme.matches(Regex("^[0-9]+(\\.[0-9]+)?$")) -> TokenType.NUMBER
+
+            // string literals (double-quoted)
             lexeme.matches(Regex("^\".*\"$")) -> TokenType.STRING
+
+            // valid identifiers
             lexeme.matches(Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")) -> TokenType.IDENTIFIER
+
+            // otherwise invalid
             else -> TokenType.INVALID
         }
     }

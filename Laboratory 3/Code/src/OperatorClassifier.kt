@@ -22,8 +22,15 @@ class OperatorClassifier : LexemeClassifier {
         "==" to TokenType.EQUAL_EQUAL,
         "!=" to TokenType.BANG_EQUAL,
         "&&" to TokenType.AND_AND,
-        "||" to TokenType.OR_OR
+        "||" to TokenType.OR_OR,
+        "+=" to TokenType.PLUS_EQUAL,
+        "-=" to TokenType.MINUS_EQUAL,
+        "*=" to TokenType.STAR_EQUAL,
+        "/=" to TokenType.DIVIDE_EQUAL,
+        "++" to TokenType.PLUS_PLUS,
+        "--" to TokenType.MINUS_MINUS
     )
+
 
     override fun matches(lexeme: String) =
         single.containsKey(lexeme) || double.containsKey(lexeme)
