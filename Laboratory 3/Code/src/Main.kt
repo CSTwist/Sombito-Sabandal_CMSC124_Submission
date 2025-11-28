@@ -59,10 +59,7 @@ fun main() {
                 try {
                     val expr = parser.parseExpression()
                     val evaluator = Evaluator()
-                    val value = evaluator.javaClass
-                        .getDeclaredMethod("evalExpr", Expr::class.java)
-                        .apply { isAccessible = true }
-                        .invoke(evaluator, expr)
+                    val value = evaluator.evalExpr(expr)
 
                     println(value)
                 } catch (ex: Exception) {

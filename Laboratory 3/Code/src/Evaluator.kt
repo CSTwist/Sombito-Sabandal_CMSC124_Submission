@@ -105,7 +105,7 @@ class Evaluator {
 
     /* ---------------- Expressions ---------------- */
 
-    private fun evalExpr(e: Expr): Any? = when (e) {
+    public fun evalExpr(e: Expr): Any? = when (e) {
         is Expr.Literal -> e.value
         is Expr.Grouping -> evalExpr(e.expression)
         is Expr.Variable -> environment.get(e.name)
@@ -123,7 +123,6 @@ class Evaluator {
         }
 
         is Expr.Binary -> {
-            // Assignment (left must be variable)
             when (e.operator.type) {
                 TokenType.EQUAL -> {
                     val value = evalExpr(e.right)
