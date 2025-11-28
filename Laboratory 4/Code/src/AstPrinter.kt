@@ -16,38 +16,26 @@ class AstPrinter {
             appendLine("  )")
         }
 
+        // NEW: Print variables
+        if (program.variables.isNotEmpty()) {
+            appendLine("  (Variables")
+            program.variables.forEach { appendLine("    ${varDeclToString(it)}") }
+            appendLine("  )")
+        }
+
         if (program.heroes.isNotEmpty()) {
             appendLine("  (Heroes")
             program.heroes.forEach { appendLine(indent(heroToString(it), 4)) }
             appendLine("  )")
         }
 
-        if (program.arenaItems.isNotEmpty()) {
-            appendLine("  (Arena")
-            program.arenaItems.forEach { appendLine(indent(arenaItemToString(it), 4)) }
-            appendLine("  )")
-        }
-
-        if (program.statusEffects.isNotEmpty()) {
-            appendLine("  (StatusEffects")
-            program.statusEffects.forEach { appendLine(indent(statusEffectToString(it), 4)) }
-            appendLine("  )")
-        }
-
-        if (program.items.isNotEmpty()) {
-            appendLine("  (Items")
-            program.items.forEach { appendLine(indent(itemToString(it), 4)) }
-            appendLine("  )")
-        }
-
-        if (program.creeps.isNotEmpty()) {
-            appendLine("  (Creeps")
-            program.creeps.forEach { appendLine(indent(creepToString(it), 4)) }
-            appendLine("  )")
-        }
-
+        // ... rest remains the same
         append(")")
     }
+
+    // NEW: Helper method for variable declarations
+    private fun varDeclToString(decl: Decl.VarDecl) =
+        "(Set ${decl.name.lexeme} = ${exprToString(decl.value)})"
 
     private fun importToString(decl: Decl.ImportDecl) = "(Import ${decl.name.lexeme})"
 

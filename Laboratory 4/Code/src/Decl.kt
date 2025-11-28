@@ -7,6 +7,9 @@ sealed interface Decl {
     /** const type IDENTIFIER = expression */
     data class ConstDecl(val type: Token?, val name: Token, val value: Expr) : Decl
 
+    /** set IDENTIFIER = expression */
+    data class VarDecl(val name: Token, val value: Expr) : Decl  // NEW
+
     /** hero IDENTIFIER { hero_body } */
     data class HeroDecl(
         val name: Token,

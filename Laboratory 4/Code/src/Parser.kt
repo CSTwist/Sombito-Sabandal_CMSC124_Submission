@@ -4,6 +4,7 @@ class Parser(private val tokens: List<Token>) {
     private var current = 0
 
     // ---- Entry Point: program = "GAME" "{" game_body "}" ----
+    // Parser.kt - Updated parseProgram() method
     fun parseProgram(): Program {
         consume(TokenType.GAME, "Expect 'GAME' at start of program.")
         consume(TokenType.LEFT_BRACE, "Expect '{' after 'GAME'.")
@@ -14,10 +15,12 @@ class Parser(private val tokens: List<Token>) {
         val statusEffects = mutableListOf<Decl.StatusEffectDecl>()
         val items = mutableListOf<Decl.ItemDecl>()
         val creeps = mutableListOf<Decl.CreepDecl>()
+        val variables = mutableListOf<Decl.VarDecl>()  // NEW: Store set statements
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             when {
                 match(TokenType.IMPORT) -> imports.add(importDecl())
+                match(TokenType.SET) -> variables.add(setDecl())  // NEW: Handle set at top level
                 match(TokenType.HEROES) -> parseHeroesBlock(heroes)
                 match(TokenType.ARENA) -> parseArenaBlock(arenaItems)
                 match(TokenType.STATUS_EFFECTS) -> parseStatusEffectsBlock(statusEffects)
@@ -31,7 +34,15 @@ class Parser(private val tokens: List<Token>) {
         }
 
         consume(TokenType.RIGHT_BRACE, "Expect '}' after game body.")
-        return Program(imports, heroes, arenaItems, statusEffects, items, creeps)
+        return Program(imports, variables, heroes, arenaItems, statusEffects, items, creeps)
+    }
+
+    // NEW: Parse set declarations at top level
+    private fun setDecl(): Decl.VarDecl {
+        val name = consume(TokenType.IDENTIFIER, "Expect identifier after 'set'.")
+        consume(TokenType.EQUAL, "Expect '=' after identifier.")
+        val value = expression()
+        return Decl.VarDecl(name, value)
     }
 
     // ---- Import: import IDENTIFIER ; ----

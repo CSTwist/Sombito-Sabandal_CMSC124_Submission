@@ -17,6 +17,14 @@ class Evaluator {
             println("Imported: ${importDecl.name.lexeme}")
         }
 
+        // Process global variable declarations
+        println("\n=== Global Variables ===")
+        for (varDecl in program.variables) {
+            val value = evalExpr(varDecl.value, environment)
+            environment.define(varDecl.name, value)
+            println("Set ${varDecl.name.lexeme} = ${stringify(value)}")
+        }
+
         // Process heroes
         for (hero in program.heroes) {
             evaluateHero(hero)
@@ -117,13 +125,38 @@ class Evaluator {
                     println("  ${stat.name.lexeme}: ${stringify(value)}")
                 }
             }
-
-            is Decl.ConstDecl -> TODO()
-            is Decl.CreepDecl -> TODO()
-            is Decl.HeroDecl -> TODO()
-            is Decl.ImportDecl -> TODO()
-            is Decl.ItemDecl -> TODO()
-            is Decl.StatusEffectDecl -> TODO()
+            is Decl.ConstDecl -> {
+                println("\n=== Const: ${item.name.lexeme} ===")
+                val value = evalExpr(item.value, environment)
+                environment.define(item.name, value)
+                println("  Value: ${stringify(value)}")
+            }
+            is Decl.VarDecl -> {
+                // Variable declarations in arena block (if needed)
+                val value = evalExpr(item.value, environment)
+                environment.define(item.name, value)
+                println("  Set ${item.name.lexeme} = ${stringify(value)}")
+            }
+            is Decl.HeroDecl -> {
+                // If a hero appears in arena items (shouldn't normally happen)
+                evaluateHero(item)
+            }
+            is Decl.CreepDecl -> {
+                // If a creep appears in arena items (shouldn't normally happen)
+                evaluateCreep(item)
+            }
+            is Decl.ItemDecl -> {
+                // If an item appears in arena items (shouldn't normally happen)
+                evaluateItem(item)
+            }
+            is Decl.StatusEffectDecl -> {
+                // If a status effect appears in arena items (shouldn't normally happen)
+                evaluateStatusEffect(item)
+            }
+            is Decl.ImportDecl -> {
+                // Import in arena block (shouldn't normally happen)
+                println("  Imported: ${item.name.lexeme}")
+            }
         }
     }
 
@@ -200,6 +233,9 @@ class Evaluator {
                     left + right
                 } else if (left is String && right is String) {
                     left + right
+                } else if (left is String || right is String) {
+                    // Allow string concatenation with other types
+                    stringify(left) + stringify(right)
                 } else {
                     throw RuntimeException("Operands must be two numbers or two strings")
                 }
