@@ -116,16 +116,16 @@ GAME MyFirstMoba {
 
 
 ## Operators
-| Type                  | Operators / Usage       |                            |   |
-| --------------------- | ----------------------- | -------------------------- | - |
-| Arithmetic            | `+ - * / %`             |                            |   |
-| Relational            | `< <= > >= == !=`       |                            |   |
-| Logical (symbolic)    | `! &&                   |                            | ` |
-| Assignment            | `=  +=  -=  *=  /=  %=` |                            |   |
-| Increment & Decrement | `++  --`                |                            |   |
-| Conditional Ternary   | `?:`                    |                            |   |
-| Pipeline              | `                       | >`  – chain behavior steps |   |
-| Comma                 | `,`                     |                            |   |
+| Type                  | Operators / Usage       |   
+| --------------------- | ----------------------- |
+| Arithmetic            | `+ - * / %`             |  
+| Relational            | `< <= > >= == !=`       |  
+| Logical (symbolic)    | `! &&                   | 
+| Assignment            | `=  +=  -=  *=  /=  %=` | 
+| Increment & Decrement | `++  --`                |  
+| Conditional Ternary   | `?:`                    |
+| Pipeline              | `                       | 
+| Comma                 | `,`                     |                        
 
 
 ## Literals
