@@ -1,282 +1,479 @@
-# CoA
+# MOBA Unity Engine DSL 
 
 ## Creator
 
-[Sherwin Paul Sabandal, Chakinzo Sombito]
+[Sherwin Paul Sabandal (itsShiii16), Chakinzo Sombito (CSTwist)]
 
 ## Language Overview
-The CoA programming langauge is a language built for simplicity. It is influenced by the C programming language. As such, there are some similarities in syntax with C. However, it has several functionalities that are different from C. In particular, CoA is dynamic and strongly typed in contrast to C which is static and weakly typed. Another difference is CoA’s introduction of the Aray structured data type.
+MOBA Unity Engine DSL (often shortened to MOBA DSL) is a domain-specific language for defining complete MOBA-style games on top of the Unity C# engine.
+
+It is designed so non-programmers (e.g., designers, game balancers) can describe heroes, abilities, items, creeps, arenas, and status effects in a declarative, designer-friendly way while the underlying engine handles execution.
 
 <h1 align="center"> WHAT'S UNIQUE</h1>
 
-Aray Structured Data Type.
-	The aray structured data type is a combination of the C array and struct. Additionally, it can also be heterogenous. Arays can also be declared within an aray. It can be declared with indices – which indicates the maximum number of variables it can store.
+Abilities are described as pipelines of effects using the |> operator. Each stage is a function-like step (e.g., single_target, deal, apply_status), making complex behaviors easy to read and compose.
 
-| DECLARATION | DESCRIPTION |
-|-------------|--------------|
-| `lagay arayName[max_variables] {variable declarations}` | Declares an array structure that can contain variables, arrays, or nested arrays. |
 
-**EXAMPLES:**
+
+**EXAMPLE:**
 ```
-// Example 1
-aray Student {
-    lagay variableName;
-    // or
-    lagay arayName[max_indices] {};
-    // or
-    lagay arayName {};
-    ...
-};
+ability Fireball {
+    type: SINGLE_TARGET
+    cooldown: 8s
+    mana_cost: 60
+    damage_type: MAGIC
+    range: 800
 
-// Example 2
-aray Student {
-    lagay name[50] {};
-    lagay details {
-        lagay age;
-        lagay grade;
-    };
-};
-```
-
-**FUNCTION BEHAVIOR**<br>
-Functions in CoA can specify the return type at the function declaration. If the function returns a different type other than the specified type it does something else. It is like an if-else statement where the "if" is the function and the "else" is the "other" block below the function. You can also omit the other block in which case it returns null. If the return type is unspecified, the other block is not applicable and is syntactically invalid. 
-
-```
-//With other block
-ganap int ADD(){ 
-	//Perform addition operations 
-} other{ 
-	// do something else. Like return a string with an error message 
-} 
-//Without other block 
-fun int ADD(){ 
-	//Perform addition operations 
+    behavior:
+        single_target(Affects: ENEMY)
+        |> deal(base: 70, scaling: 60% AP)
+        |> apply_status(Burn)
 }
 ```
 
+**SECTION-BASED GAME DEFINITION**<br>
+The game is organized into semantic sections inside a single GAME block. Each section focuses on one domain: heroes, arena, status effects, items, and creeps.
+
+```
+GAME MyFirstMoba {
+    Heroes { ... }
+    Arena { ... }
+    StatusEffects { ... }
+    Items { ... }
+    Creeps { ... }
+}
+
+```
+
 ## Keywords
-| Keywords | Description |
-|----------|-------------|
-| lagay	   |             declare a mutable variable|
-| peg	   |             declare an immutable variable |
-|enum	   |             Enumeration |
-|kung	   |             conditional (if) |
-|kungdi	   |             conditional (else if) |
-|kundi	   |             else branch |
-|baylo	   |             Switch. Executes one block of code among many options based on an expression’s value |
-|kaso	   |             Defines a branch in a switch(baylo) statement. |
-|habang	   |             loop while condition is true |
-|para	   |             C-style for loop (init; cond; step) |
-|padayon   |             Skips the rest of the loop body and moves to the next iteration. |
-|guba	   |             break; Exits loops and the switch statement |
-|ganap	   |             function declaration |
-|other	   |             else statement for functions |
-|balik	   |             return from a function (optionally with value) |
-|kadto	   |             Jumps to a labeled statement in the same function |
-|void	   |             Specifies that a function returns no value or that a pointer has no specific type. |
-|yass(true), noh(false) | Boolean Literals |
-|try	   |             Exception handling try statement |
-|catch	   |             catch exceptions |
-|wala	   |             Null Literal |
-|chika	   |             built-in print/log to output values |
+| Keyword          | Description                                                 |
+| ---------------- | ----------------------------------------------------------- |
+| `GAME`           | Declares a full game configuration block                    |
+| `Heroes`         | Section for defining all heroes                             |
+| `Arena`          | Section for defining teams, cores, turrets, and map setup   |
+| `StatusEffects`  | Section for defining buffs and debuffs                      |
+| `Items`          | Section for defining all items                              |
+| `Creeps`         | Section for defining lane/neutral creeps                    |
+| `set`            | Declare a mutable variable                                  |
+| `const`          | Declare an immutable variable                               |
+| `Number`         | Primitive numeric type                                      |
+| `Boolean`        | Primitive logical type                                      |
+| `String`         | Primitive text type                                         |
+| `Duration`       | Primitive time type                                         |
+| `Percentage`     | Primitive percentage type                                   |
+| `Vector`         | Primitive vector type (position/direction)                  |
+| `Entity`         | Base type for all in-game entities                          |
+| `hero`           | Declare a hero inside `Heroes`                              |
+| `creep`          | Declare a creep inside `Creeps`                             |
+| `turret`         | Declare a turret inside `Arena`                             |
+| `core`           | Declare a core/base inside `Arena`                          |
+| `team`           | Declare a team inside `Arena`                               |
+| `item`           | Declare an item inside `Items`                              |
+| `ability`        | Declare an ability inside a hero or item                    |
+| `statusEffect`   | Declare a status effect inside `StatusEffects`              |
+| `type`           | Ability/status field for type classification                |
+| `cooldown`       | Ability field for cooldown duration                         |
+| `mana_cost`      | Ability field for mana/resource cost                        |
+| `damage_type`    | Ability field for damage type (`PHYSICAL`, `MAGIC`, `PURE`) |
+| `range`          | Ability field for casting/target range                      |
+| `behavior`       | Declares the behavior pipeline of an ability or passive     |
+| `duration`       | Duration of a status effect or timed behavior               |
+| `on_cast`        | Hook: triggers when an ability is cast                      |
+| `on_hit`         | Hook: triggers when an attack/ability hits                  |
+| `on_tick`        | Hook: triggers periodically while an effect is active       |
+| `on_expire`      | Hook: triggers when a status effect ends                    |
+| `apply_status`   | Apply one or more status effects to a target                |
+| `remove_status`  | Remove one or more status effects from a target             |
+| `knockback`      | Apply a knockback displacement                              |
+| `stun`           | Stun the target                                             |
+| `slow`           | Slow the target                                             |
+| `silence`        | Silence the target                                          |
+| `root`           | Root the target (no movement)                               |
+| `shield`         | Apply a shield that absorbs damage                          |
+| `projectile`     | Spawn/configure a projectile                                |
+| `dash`           | Move the caster in some direction or to a target            |
+| `teleport`       | Instantly move an entity to a position                      |
+| `spawn`          | Spawn an entity (e.g., creep, minion, object)               |
+| `summon`         | Summon a controllable or timed entity                       |
+| `play_vfx`       | Play a visual effect                                        |
+| `play_sfx`       | Play a sound effect                                         |
+| `target`         | Contextual reference to the current target                  |
+| `caster`         | Contextual reference to the entity casting an ability       |
+| `self`           | Contextual reference to the effect owner                    |
+| `ally` / `enemy` | Target designators in behavior calls                        |
+| `ALLY`           | Target category: allied units                               |
+| `ENEMY`          | Target category: enemy units                                |
+| `NEUTRAL`        | Target category: neutral units                              |
+| `PHYSICAL`       | Damage type: physical damage                                |
+| `MAGIC`          | Damage type: magic damage                                   |
+| `PURE`           | Damage type: pure/true damage                               |
+| `BUFF`           | Status type: beneficial effect                              |
+| `DEBUFF`         | Status type: harmful effect                                 |
+| `SINGLE_TARGET`  | Ability type: single target                                 |
+| `AOE`            | Ability type: area of effect                                |
+| `PASSIVE`        | Ability type: passive/always-on                             |
+| `scaling`        | DSL helper for describing scaling formulas                  |
+
 
 ## Operators
-| Type | Operators |
-|------|-----------|
-|Arithmetic | + - * / % |
-|Relational |   < <= > >= == != |
-|Logical (symbolic) | ! && || |
-|Logical (word aliases) | 1) hindi (prefix) → logical NOT (e.g., hindi x) <br>2) tsaka (infix) → logical AND (e.g., a tsaka b) <br>3) or (infix) → logical OR (e.g., a or b) |
-|Assignment | = += -= *= /= %= |
-|Increment | ++ |
-|Decrement | -- |
-|Bitwise | & ` ^ ~ << >> |
-|Conditional Ternary | ?: |
-|Special | sizeof, ., ->, &, * |
-|Comma | , |
+| Type                  | Operators / Usage       |                            |   |
+| --------------------- | ----------------------- | -------------------------- | - |
+| Arithmetic            | `+ - * / %`             |                            |   |
+| Relational            | `< <= > >= == !=`       |                            |   |
+| Logical (symbolic)    | `! &&                   |                            | ` |
+| Assignment            | `=  +=  -=  *=  /=  %=` |                            |   |
+| Increment & Decrement | `++  --`                |                            |   |
+| Conditional Ternary   | `?:`                    |                            |   |
+| Pipeline              | `                       | >`  – chain behavior steps |   |
+| Comma                 | `,`                     |                            |   |
+
 
 ## Literals
-| Type | Description |
-|------|-------------|
-| Numbers | integers (42), float (3.14, .5, 0.3333333), and double (3.14159265358979323, .14159265358979323) |
-| Strings | enclosed in double quotes "hello". Supports escape sequences \", \\, \n, \t, \r. |
-| Characters | enclosed in single quotes, 'c' |
-| Booleans | yass, noh. |
-| Null | wala.|
+| Type                | Description                                                                     |
+| ------------------- | ------------------------------------------------------------------------------- |
+| Numbers             | **Integer:** `0`, `1`, `25`, `300`   /   **Float:** `0.5`, `3.14`, `10.0`       |
+| Strings             | Enclosed in double quotes, e.g., `"Pyromancer"`, `"Basic Attack"`, `"Fireball"` |
+| Booleans            | `True`, `False`                                                                 |
+| Duration literals   | `<number>s` — e.g., `3s`, `10s`, `60s`                                          |
+| Percentage literals | `<number>%` — e.g., `10%`, `30%`, `100%`                                        |
+| Null                | Represents “no value”. (Implementation typically uses `null` in code.)          |
 
 ## Identifiers
 1) Can contain letters, digits, and underscores (_).
 2) Must not start with a digit.
-3) Must start with OA_.
-4) Case-sensitive (OA_myVar and OA_myvar are different identifiers)
+3) Must not be any reserved keyword.
+4) Identifiers are case-sensitive (Pyromancer, pyromancer, and PYROMANCER are all different).
+x
+Examples:
+
+Pyromancer, Fireball, LightMeleeCreep
+
+attackDamage, moveSpeed, heroLevel
 
 ## Comments
-1) Single-line: // until the end of the line.
-2) Block: /* ... */, may span multiple lines.
-3) Nested block comments are not supported.
+
+Single-line:
+// This is a single-line comment
+
+Block:
+/* This is a
+   multi-line comment */
+   
+Nested block comments are not supported.
 
 ## Syntax Style
-1) Whitespace is not significant except to separate tokens.
-2) Statements are terminated by a semicolon (;).
-3) Blocks are enclosed in braces { ... }.
-4) Parentheses () are used for grouping expressions and control flow conditions.
+Whitespace is not significant except to separate tokens.
 
+Sections and game structure are defined inside a single GAME block.
+
+Blocks are enclosed in braces { ... }.
+
+Object-like data (e.g., stats) use key: value pairs inside { ... }.
+
+Behavior pipelines are written top-to-bottom using |>.
 ## Sample Code
 ```
-ganap main() {
-    chika("Hi, bes!");
-    
-    peg OA_greeting = "As in hello, world!";
-    lagay OA_count = 0;
+import Maps;
 
-    chika(OA_greeting);
+GAME MyFirstMoba {
 
-    kung (OA_count == 0 tsaka yass) {
-        chika("fresh pa tayo");
-    } kundi {
-        chika("medyo pagod na");
-    }
+  set initialHeroLevel = 1
 
-    para (lagay i = 0; OA_i < 3; OA_i = OA_i + 1) {
-        chika("count: " + OA_i);
-    }
+  Heroes {
 
-    habang (hindi (OA_count >= 5) or yass) {
-        OA_count = OA_count + 1;
-        chika("progress: " + OA_count);
-        kung (OA_count > 6) {
-            balik wala;
+    hero Pyromancer {
+
+      heroStat: {
+        level: initialHeroLevel
+        hp: 500
+        mana: 300
+        attackDamage: 55
+        abilityPower: 80
+        armor: 20
+        magicResist: 30
+        moveSpeed: 335
+      }
+
+      abilities: {
+
+        ability Fireball {
+          type: SINGLE_TARGET
+          cooldown: 8s
+          mana_cost: 60
+          damage_type: MAGIC
+          range: 800
+
+          behavior:
+            single_target(Affects: ENEMY)
+            |> deal(base: 70, scaling: 60% AP)
+            |> apply_status(Burn)
         }
+
+        ability Recover {
+          type: SINGLE_TARGET
+          cooldown: 12s
+          mana_cost: 50
+          damage_type: MAGIC
+          range: 600
+
+          behavior:
+            single_target(Affects: ALLY, IncludeSelf: true)
+            |> deal(base: 0, scaling: 0% AP)  // no damage, just consistency
+            |> apply_status(Regeneration)
+        }
+
+      }
+
     }
 
-    balik 0;
+  }
+
+  Arena {
+
+    team Light {
+      core CoreOfLight
+
+      turrets: {
+        turret LightOuterTop {
+          hp: 2000
+          attackDamage: 160
+          attackRange: 750
+        }
+      }
+    }
+
+    team Dark {
+      core CoreOfDark
+
+      turrets: {
+        turret DarkOuterTop {
+          hp: 2000
+          attackDamage: 160
+          attackRange: 750
+        }
+      }
+    }
+
+  }
+
+  StatusEffects {
+
+    statusEffect Burn {
+      type: DEBUFF
+      duration: 3s
+
+      on_apply: {
+        apply DealDamage(10) to target
+      }
+
+      on_tick: {
+        apply DealDamage(10) to target
+      }
+    }
+
+    statusEffect Regeneration {
+      type: BUFF
+      duration: 5s
+
+      on_apply: {
+        apply Heal(10) to target
+      }
+
+      on_tick: {
+        apply Heal(15) to target
+      }
+    }
+
+  }
+
+  Creeps {
+
+    creep LightMeleeCreep {
+      team: Light
+      hp: 400
+      attackDamage: 30
+      moveSpeed: 325
+    }
+
+    creep DarkMeleeCreep {
+      team: Dark
+      hp: 400
+      attackDamage: 30
+      moveSpeed: 325
+    }
+
+  }
+
+  Items {
+
+    item SorcerersTorch {
+      cost: 900
+
+      stats: {
+        abilityPower: 60
+      }
+
+      passive: {
+        behavior:
+          on_hit(target: ENEMY)
+          |> apply_status(Burn)
+      }
+    }
+
+  }
+
 }
 
 ```
 ## Design Rationale
 
+Domain-specific focus:
+The language is built around MOBA concepts (heroes, abilities, items, status effects, creeps, arena). This keeps the mental model close to how designers think.
 
-Dynamic typing: simplifies the language and accelerates prototyping.
+Pipeline-based behaviors:
+The |> operator encourages composing complex behaviors from small, reusable steps (single_target, deal, apply_status, etc.).
 
-C-inspired and Kotlin-inspired syntax: familiar and modern, but simplified for easier use.
+Sectioned layout:
+Separating Heroes, Arena, StatusEffects, Items, and Creeps improves readability and makes it easier to find and modify specific parts of the game.
 
-Block-style languages, such as C, prepare the language for easy parsing in later stages.
+Data-first, logic-light:
+Most of the DSL is declarative — numbers, flags, and simple pipelines — leaving heavy logic and performance concerns to the Unity/C# backend.
 
-Minimal features: chosen to be feasible in a 3-month course.
+Safety and validation:
+A fixed structure and reserved keywords make it easier to validate DSL files and catch configuration errors early before they reach the engine.
 
-Error handling: built into the scanner to detect invalid tokens, unterminated strings, and comments.
-
-Educational motivation: emphasizes learning how real languages tokenize, parse, and interpret code rather than creating a production-ready language.
+Fast iteration:
+Designers can tweak balance values, add new effects, or create heroes without touching C# scripts, drastically speeding up iteration.
 
 
 ## Grammar
 
 ```
-Program        ::= { TopLevelDecl } EOF
+game_file      ::= [ import_stmt { import_stmt } ] "GAME" IDENT block ;
 
-TopLevelDecl   ::= FunDecl
-                 | VarDecl
-                 | ConstDecl
-                 | ArayDecl
-                 | EnumDecl
-                 | Statement
+import_stmt    ::= "import" IDENT ";" ;
 
-FunDecl        ::= "ganap" [ DataType ] IDENTIFIER "(" [ ParamList ] ")" Block [ OtherBlock ]
-OtherBlock     ::= "other" Block
-ParamList      ::= IDENTIFIER { "," IDENTIFIER }
+block          ::= "{" { declaration | section } "}" ;
+
+section        ::= heroes_section
+                 | arena_section
+                 | status_effects_section
+                 | items_section
+                 | creeps_section ;
 
 
-VarDecl        ::= "lagay" IDENTIFIER [ "=" Expression ] ";"
-ConstDecl      ::= "peg" IDENTIFIER [ "=" Expression ] ";"
+heroes_section ::= "Heroes" "{" { hero_def } "}" ;
 
-ArayDecl       ::= "aray" IDENTIFIER "{" { ArayMember } "}" ";"
-ArayMember     ::= DataType IDENTIFIER [ "[" NUMBER "]" ] ";"
-                 | "aray" IDENTIFIER [ "[" NUMBER "]" ] ";"
+hero_def       ::= "hero" IDENT "{" hero_body "}" ;
 
-EnumDecl       ::= "enum" IDENTIFIER "{" EnumList "}" ";"
-EnumList       ::= IDENTIFIER { "," IDENTIFIER }
+hero_body      ::= hero_stat_block
+                 | hero_stat_block abilities_block
+                 | abilities_block ;
+
+hero_stat_block::= "heroStat" ":" "{" { stat_entry } "}" ;
+
+stat_entry     ::= IDENT ":" expression ;
+
+abilities_block::= "abilities" ":" "{" { ability_def } "}" ;
+
+ability_def    ::= "ability" IDENT "{" ability_body "}" ;
+
+ability_body   ::= { ability_field | behavior_field } ;
+
+ability_field  ::= "type" ":" IDENT
+                 | "cooldown" ":" expression
+                 | "mana_cost" ":" expression
+                 | "range" ":" expression
+                 | "damage_type" ":" IDENT ;
+
+behavior_field ::= "behavior" ":" behavior_expr ;
+
+behavior_expr  ::= pipeline_expr ;
+
+pipeline_expr  ::= function_call { "|>" function_call } ;
+
+function_call  ::= IDENT "(" [ argument_list ] ")" ;
+
+argument_list  ::= argument { "," argument } ;
+
+argument       ::= IDENT ":" expression ;
+
+arena_section  ::= "Arena" "{" arena_body "}" ;
+
+arena_body     ::= { team_def | core_def | turret_def } ;
+
+team_def       ::= "team" IDENT "{" team_body "}" ;
+
+team_body      ::= [ core_ref ] [ turret_block ] ;
+
+core_ref       ::= "core" IDENT ;
+
+turret_block   ::= "turrets" ":" "{" { turret_def } "}" ;
+
+turret_def     ::= "turret" IDENT "{" turret_body "}" ;
+
+turret_body    ::= { IDENT ":" expression } ;
+
+
+status_effects_section
+               ::= "StatusEffects" "{" { status_effect_def } "}" ;
+
+status_effect_def
+               ::= "statusEffect" IDENT "{" status_effect_body "}" ;
+
+status_effect_body
+               ::= { status_effect_field } ;
+
+status_effect_field
+               ::= "type" ":" IDENT
+                | "duration" ":" expression
+                | "on_apply" ":" block
+                | "on_tick" ":" block
+                | "on_expire" ":" block ;
+
+
+items_section  ::= "Items" "{" { item_def } "}" ;
+
+item_def       ::= "item" IDENT "{" item_body "}" ;
+
+item_body      ::= { item_field | passive_block } ;
+
+item_field     ::= IDENT ":" expression ;
+
+passive_block  ::= "passive" ":" "{" passive_body "}" ;
+
+passive_body   ::= "behavior" ":" behavior_expr ;
+
+creeps_section ::= "Creeps" "{" { creep_def } "}" ;
+
+creep_def      ::= "creep" IDENT "{" creep_body "}" ;
+
+creep_body     ::= { IDENT ":" expression } ;
+
+const_decl     ::= "const" type_expr IDENT "=" expression ;
+set_stmt       ::= "set" IDENT "=" expression ";" ;
+
+type_expr      ::= "Number"
+                 | "Boolean"
+                 | "String"
+                 | "Duration"
+                 | "Percentage"
+                 | "Hero"
+                 | "Creep"
+                 | "Turret"
+                 | "Core"
+                 | "Team"
+                 | "Ability"
+                 | "StatusEffect"
+                 | "Item" ;
+
+expression     ::= ...   (* standard expression grammar: literals, identifiers, operators *)
+
+
 
 ```
 
 
-```
-Statement      ::= ExprStmt
-                 | PrintStmt
-                 | ReturnStmt
-                 | IfStmt
-                 | WhileStmt
-                 | ForStmt
-                 | SwitchStmt
-                 | TryCatchStmt
-                 | BreakStmt
-                 | ContinueStmt
-                 | Block
-
-
-Block          ::= "{" { Statement } "}"
-
-TryCatchStmt   ::= "try" Block { "catch" "(" IDENTIFIER ")" Block } [ "finally" Block ]
-ExprStmt       ::= Expression ";"
-PrintStmt      ::= "chika" "(" [ ArgList ] ")" ";"
-ReturnStmt     ::= "balik" [ Expression ] ";"
-
-IfStmt         ::= "kung" "(" Expression ")" Statement
-                   { "kungdi" "(" Expression ")" Statement }
-                   [ "kundi" Statement ]
-
-SwitchStmt     ::= "baylo" "(" Expression ")" "{"
-                     { "kaso" Constant ":" { Statement } }
-                     [ "kundi" ":" { Statement } ]
-                   "}"
-
-WhileStmt      ::= "habang" "(" Expression ")" Statement
-
-ForStmt        ::= "para" "(" ForInit ForCond ForStep ")" Statement
-ForInit        ::= VarDecl | ConstDecl | [ Expression ] ";"
-ForCond        ::= [ Expression ] ";"
-ForStep        ::= [ Expression ]
-
-BreakStmt      ::= "guba" ";"
-ContinueStmt   ::= "padayon" ";"
-GotoStmt       ::= "kadto" IDENTIFIER ";"
-
-```
-
-```
-Expression     ::= Assignment
-Assignment     ::= LogicOr | LValue AssignOp Assignment
-AssignOp       ::= "=" | "+=" | "-=" | "*=" | "/=" | "%="
-
-CallArgs       ::= "(" [ ArgList ] ")" ;
-ArgList        ::= Expression { COMMA Expression } ;
-
-```
-
-```
-LogicOr        ::= LogicAnd { ("||" | "or") LogicAnd }
-LogicAnd       ::= Equality { ("&&" | "tsaka") Equality }
-Equality       ::= Comparison { ("==" | "!=") Comparison }
-Comparison     ::= Term { ("<" | "<=" | ">" | ">=") Term }
-Term           ::= Factor { ("+" | "-") Factor }
-Factor         ::= Unary { ("*" | "/" | "%") Unary }
-Unary          ::= ("!" | "hindi" | "-") Unary | Postfix
-
-```
-
-```
-Postfix        ::= Primary { Member }
-Member         ::= "." IDENTIFIER | CallArgs
-CallArgs       ::= "(" [ ArgList ] ")"
-ArgList        ::= Expression { "," Expression }
-
-Primary        ::= IDENTIFIER
-                 | NUMBER
-                 | STRING
-                 | "yass"        // true
-                 | "noh"         // false
-                 | "wala"        // null
-                 | "(" Expression ")"
-```
 
 
 
