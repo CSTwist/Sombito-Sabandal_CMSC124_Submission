@@ -472,12 +472,51 @@ expression     ::= ...   (* standard expression grammar: literals, identifiers, 
 
 script_block   ::= "{" { statement } "}" ;
 
-statement      ::= if_stmt
-                 | loop_stmt
-                 | set_stmt
-                 | const_decl
-                 | return_stmt
-                 | expression_stmt ;
+function_decl
+    ::= "fun" IDENT "(" [ parameter_list ] ")" block ;
+
+parameter_list
+    ::= parameter { "," parameter } ;
+
+parameter
+    ::= IDENT ;
+
+function_call
+    ::= IDENT "(" [ argument_list ] ")" ;
+
+argument_list
+    ::= argument { "," argument } ;
+
+argument
+    ::= positional_argument
+     | named_argument ;
+
+positional_argument
+    ::= expression ;
+
+named_argument
+    ::= IDENT ":" expression ;
+
+block
+    ::= "{" { statement } "}" ;
+
+statement
+    ::= set_stmt
+     | expr_stmt
+     | if_stmt
+     | while_stmt
+     | for_stmt
+     | return_stmt
+     | function_call_stmt
+     | apply_stmt
+     | stat_entry_stmt ;
+
+function_call_stmt
+    ::= function_call ";" ;
+
+return_stmt
+    ::= "return" expression? ";" ;
+
 
 if_stmt        ::= "if" "(" expression ")" script_block [ "else" ( script_block | if_stmt ) ] ;
 
