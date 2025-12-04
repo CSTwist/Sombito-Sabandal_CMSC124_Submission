@@ -469,7 +469,28 @@ type_expr      ::= "Number"
 
 expression     ::= ...   (* standard expression grammar: literals, identifiers, operators *)
 
+/* A block specifically for logic execution, distinct from structural definitions */
+script_block   ::= "{" { statement } "}" ;
 
+statement      ::= if_stmt
+                 | loop_stmt
+                 | set_stmt
+                 | const_decl
+                 | return_stmt
+                 | expression_stmt ;
+
+if_stmt        ::= "if" "(" expression ")" script_block [ "else" ( script_block | if_stmt ) ] ;
+
+loop_stmt      ::= while_stmt
+                 | for_stmt ;
+
+while_stmt     ::= "while" "(" expression ")" script_block ;
+
+for_stmt       ::= "for" "(" IDENT "in" expression ")" script_block ;
+
+expression_stmt::= expression ";" ;
+
+return_stmt    ::= "return" [ expression ] ";" ;
 
 ```
 
