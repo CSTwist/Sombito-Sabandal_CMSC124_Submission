@@ -1,0 +1,128 @@
+import StandardLib;
+
+GAME Galactic_Clash {
+
+// 1. Global Variables & Reassignment
+set DIFFICULTY_MULTIPLIER = 1.5;
+set MAX_RESPAWN_TIME = 60;
+
+// Reassigning a global variable (supported by the updated Parser)
+MAX_RESPAWN_TIME = 45;
+
+// 2. Functions
+Functions {
+    function calculateCrit(Number baseDamage, Number chance) : Number {
+        const Number threshold = 0.8;
+        if (chance > threshold) {
+            return baseDamage * 2;
+        } else {
+            return baseDamage;
+        }
+    }
+}
+
+// 3. Heroes Definition
+Heroes {
+    hero VoidWalker {
+        heroStat: {
+            health: 1200
+            mana: 300
+            armor: 15
+        }
+
+        abilities: {
+            ability Blink {
+                type: Active
+                cooldown: 12s
+                mana_cost: 60
+                range: 500
+                damage_type: None
+
+                behavior: {
+                    apply Teleport(500) to self;
+                }
+            }
+
+            ability VoidRay {
+                type: Active
+                cooldown: 4s
+                mana_cost: 30
+                range: 800
+                damage_type: Magic
+
+                // Pipeline expression behavior
+                behavior: GetTarget() |> ApplyEffect("Slowed") |> DealDamage(75)
+            }
+        }
+    }
+}
+
+// 4. Items Definition
+Items {
+    item BootsOfSpeed {
+        speed: 50
+        cost: 400
+
+        passive: {
+            behavior: GetUser() |> IncreaseSpeed(15%);
+        }
+    }
+}
+
+// 5. Status Effects
+StatusEffects {
+    statusEffect Burning {
+        type: DOT
+        duration: 5s
+
+        on_apply: {
+            apply PlayAnimation("burn_start") to target;
+        }
+
+        on_tick: {
+            apply DealDamage(10) to target;
+        }
+
+        on_expire: {
+            apply StopAnimation("burn_loop") to target;
+        }
+    }
+}
+
+// 6. Creeps
+Creeps {
+    creep SpaceBeetle {
+        health: 200
+        damage: 12
+        gold_bounty: 25
+    }
+}
+
+// 7. Arena Structure
+Arena {
+    core Nexus {
+        health: 5000
+        regen: 20
+    }
+
+    team Blue {
+        core Nexus
+
+        turrets: {
+            turret TopLane_T1 {
+                health: 2500
+                damage: 120
+                range: 900
+            }
+
+            turret BotLane_T1 {
+                health: 2500
+                damage: 120
+                range: 900
+            }
+        }
+    }
+}
+
+printLog();
+}
