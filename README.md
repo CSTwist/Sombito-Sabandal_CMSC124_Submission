@@ -386,7 +386,7 @@ ability_field  ::= "type" ":" IDENT
                  | "range" ":" expression
                  | "damage_type" ":" IDENT ;
 
-behavior_field ::= "behavior" ":" behavior_expr ;
+behavior_field ::= "behavior" ":" ( behavior_expr | script_block ) ;
 
 behavior_expr  ::= pipeline_expr ;
 
@@ -426,10 +426,10 @@ status_effect_body
 
 status_effect_field
                ::= "type" ":" IDENT
-                | "duration" ":" expression
-                | "on_apply" ":" block
-                | "on_tick" ":" block
-                | "on_expire" ":" block ;
+                 | "duration" ":" expression
+                 | "on_apply" ":" script_block 
+                 | "on_tick" ":" script_block
+                 | "on_expire" ":" script_block ;
 
 
 items_section  ::= "Items" "{" { item_def } "}" ;
