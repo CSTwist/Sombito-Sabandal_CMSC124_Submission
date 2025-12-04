@@ -159,6 +159,7 @@ sealed interface Stmt {
     data class ForStmt(val variable: Token, val collection: Expr, val body: BlockStmt) : Stmt
 
     data class ReturnStmt(val keyword: Token, val value: Expr?) : Stmt
+    data class FunStmt(val variable: Token) : Stmt
 }
 
 

@@ -1,0 +1,148 @@
+import StandardLib;
+import Math;
+
+GAME MOBA_Battle {
+
+// Top-level Global Variables
+set MAX_LEVEL = 18;
+set BASE_GOLD = 500;
+
+set string1 = "string";
+string1 = "cool";
+
+// Functions Section
+Functions {
+    function calculateDamage(Number base, Number multiplier) : Number {
+        const Number result = base * multiplier;
+        return result;
+    }
+
+    function isEnemy(Entity entity) : Boolean {
+        // Placeholder logic
+        return true;
+    }
+}
+
+// Heroes Definition
+Heroes {
+    hero Paladin {
+        // Hero Stats
+        heroStat: {
+            health: 1000
+            mana: 200
+            speed: 300
+        }
+
+        // Abilities
+        abilities: {
+            ability HolyLight {
+                type: Active
+                cooldown: 10s
+                mana_cost: 50
+                range: 600
+                damage_type: Magic
+
+                // Script Block Behavior with Control Flow
+                behavior: {
+                    if (Target != null) {
+                        apply Heal(200) to target;
+                    } else {
+                        apply Heal(100) to self;
+                    }
+                }
+            }
+
+            ability Smite {
+                type: Active
+                cooldown: 5s
+                mana_cost: 30
+                range: 150
+                damage_type: Physical
+
+                // Pipeline Expression Behavior
+                behavior: GetTarget() |> FilterEnemies() |> DealDamage(50)
+            }
+        }
+    }
+}
+
+// Items Definition
+Items {
+    item SwordOfMight {
+        damage: 20
+        cost: 1200
+
+        // Passive using Pipeline
+        passive: {
+            behavior: GetUser() |> IncreaseDamage(10%);
+        }
+    }
+}
+
+// Status Effects
+StatusEffects {
+    statusEffect Stunned {
+        type: CrowdControl
+        duration: 2s
+
+        on_apply: {
+            apply StopAnimation() to target;
+        }
+
+        on_tick: {
+           // Do nothing every tick
+        }
+
+        on_expire: {
+            apply ResumeAnimation() to target;
+        }
+    }
+}
+
+// Creeps Definition
+Creeps {
+    creep MeleeMinion {
+        health: 300
+        damage: 15
+        gold_bounty: 40
+    }
+
+    creep RangedMinion {
+        health: 150
+        damage: 25
+        gold_bounty: 45
+    }
+}
+
+// Arena Definition (Nested Teams)
+Arena {
+
+    // Define Core separately to be referenced
+    core RadiantAncient {
+        health: 5000
+        regen: 5
+    }
+
+    team Radiant {
+        // Reference the core defined above
+        core RadiantAncient
+
+        // Turrets block inside the team
+        turrets: {
+            turret T1_Mid {
+                health: 2000
+                damage: 100
+                range: 800
+            }
+
+            turret T2_Mid {
+                health: 2500
+                damage: 150
+                range: 800
+            }
+        }
+    }
+}
+
+
+}

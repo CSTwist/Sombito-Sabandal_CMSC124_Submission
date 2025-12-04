@@ -36,6 +36,23 @@ class Parser(private val tokens: List<Token>) {
                 match(TokenType.ITEMS) -> parseItemsBlock(items)
                 match(TokenType.CREEPS) -> parseCreepsBlock(creeps)
                 match(TokenType.FUNCTIONS) -> parseFunctionsBlock(functions)
+
+                // Allow "IDENT = EXPR;" at top level
+                check(TokenType.IDENTIFIER) -> {
+                    // Lookahead to ensure it's an assignment
+                    // We don't want to consume the token if it turns out to be invalid,
+                    // but at top level, a lone identifier is usually only valid if it's an assignment.
+                    val name = advance()
+                    if (match(TokenType.EQUAL)) {
+                        val value = expression()
+                        consume(TokenType.SEMICOLON, "Expect ';' after assignment.")
+                        // We store this as a VarDecl. The Evaluator treats VarDecl as "define or update".
+                        variables.add(Decl.VarDecl(name, value))
+                    } else {
+                        error(previous(), "Unexpected top-level identifier. Did you mean to assign a variable?")
+                    }
+                }
+
                 else -> {
                     error(peek(), "Unexpected token in game body: '${peek().lexeme}'")
                     advance()
@@ -85,10 +102,6 @@ class Parser(private val tokens: List<Token>) {
         val params = mutableListOf<Param>()
         if (!check(TokenType.RIGHT_PAREN)) {
             do {
-                // Grammar: type_expr IDENT
-                // But generally parsers do IDENT : type.
-                // The provided grammar says: param ::= type_expr IDENT
-                // Let's follow grammar strictly.
                 val type = parseTypeExpr()
                 val paramName = consume(TokenType.IDENTIFIER, "Expect parameter name.")
                 params.add(Param(type, paramName))
@@ -106,8 +119,7 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun parseTypeExpr(): Token {
-        if (match(TokenType.IDENTIFIER)) return previous() // e.g. Number, Boolean
-        // Fallback if specific tokens are used for types, but IDENTIFIER usually covers custom types
+        if (match(TokenType.IDENTIFIER)) return previous()
         error(peek(), "Expect type name.")
         return Token(TokenType.INVALID, "", null, 0)
     }
@@ -214,7 +226,6 @@ class Parser(private val tokens: List<Token>) {
             }
             match(TokenType.BEHAVIOR) -> {
                 consume(TokenType.COLON, "Expect ':'.")
-                // behavior: { ... } OR behavior: func() |> func()
                 if (check(TokenType.LEFT_BRACE)) {
                     AbilityField.BehaviorField(block(), null)
                 } else {
@@ -231,16 +242,12 @@ class Parser(private val tokens: List<Token>) {
 
     // ---- Pipeline Expression: func() |> func() ----
     private fun pipelineExpr(): Expr {
-        // Grammar: behavior_expr ::= pipeline_expr
-        // pipeline_expr ::= function_call { "|>" function_call }
-
         var expr: Expr = Expr.FunctionCallExpr(functionCall())
 
         while (match(TokenType.PIPE_GREATER)) {
             val op = previous()
             val rightCall = functionCall()
             val rightExpr = Expr.FunctionCallExpr(rightCall)
-            // Treat pipeline as a binary op for evaluation purposes
             expr = Expr.Binary(expr, op, rightExpr)
         }
         return expr
@@ -264,7 +271,6 @@ class Parser(private val tokens: List<Token>) {
     }
 
     private fun teamDecl(): Decl.TeamDecl {
-        // team IDENT { [core ref] [turrets block] }
         val name = consume(TokenType.IDENTIFIER, "Expect team name.")
         consume(TokenType.LEFT_BRACE, "Expect '{'.")
 
@@ -434,12 +440,14 @@ class Parser(private val tokens: List<Token>) {
         if (match(TokenType.IF)) return ifStatement()
         if (match(TokenType.WHILE)) return whileStatement()
         if (match(TokenType.FOR)) return forStatement()
+
         if (match(TokenType.RETURN)) {
             val keyword = previous()
             val value = if (check(TokenType.SEMICOLON)) null else expression()
             consume(TokenType.SEMICOLON, "Expect ';'.")
             return Stmt.ReturnStmt(keyword, value)
         }
+
         if (match(TokenType.CONST)) {
             val type = parseTypeExpr()
             val name = consume(TokenType.IDENTIFIER, "Expect name.")
@@ -448,6 +456,7 @@ class Parser(private val tokens: List<Token>) {
             consume(TokenType.SEMICOLON, "Expect ';'.")
             return Stmt.ConstDeclStmt(type, name, value)
         }
+
         if (match(TokenType.SET)) {
             val name = consume(TokenType.IDENTIFIER, "Expect name.")
             consume(TokenType.EQUAL, "Expect '='.")
@@ -455,36 +464,37 @@ class Parser(private val tokens: List<Token>) {
             consume(TokenType.SEMICOLON, "Expect ';'.")
             return Stmt.SetStmt(name, value)
         }
+
         if (match(TokenType.APPLY)) {
             val call = functionCall()
             consume(TokenType.TO, "Expect 'to'.")
             val target = targetExpr()
-            consume(TokenType.SEMICOLON, "Expect ';'.") // Semicolon inferred? Grammar says set_stmt ends in ; but apply not explicit?
-            // Grammar doesn't explicitly put ; on apply, but standard Stmt usually has it.
-            // Grammar: statement ::= ... | expression_stmt. expression_stmt ::= expression ";"
-            // Wait, grammar: behavior_expr ::= pipeline_expr.
-            // script_block ::= "{" { statement } "}".
-            // statement ::= if | loop | set | const | return | expression_stmt.
-            // "apply" is likely a function call expression statement.
-            // But if "Apply" is a keyword, handle it.
+            consume(TokenType.SEMICOLON, "Expect ';'.")
             return Stmt.ApplyStmt(call, target)
         }
 
-        // Expression statement or assignment or stat entry
+        // Check for Identifiers (Assignment, StatEntry, or Function Calls)
         if (check(TokenType.IDENTIFIER)) {
-            // Lookahead
             val saved = current
             val name = advance()
-            if (match(TokenType.COLON)) {
-                // Stat entry: IDENT : EXPR
+
+            if (match(TokenType.EQUAL)) {
+                // Reassignment: name = value; (No 'set' required)
                 val value = expression()
-                // No semicolon in stat_entry grammar: stat_entry ::= IDENT ":" expression
+                consume(TokenType.SEMICOLON, "Expect ';' after assignment.")
+                return Stmt.SetStmt(name, value)
+            }
+            else if (match(TokenType.COLON)) {
+                // Stat entry: name : value
+                val value = expression()
                 return Stmt.StatEntryStmt(StatEntry(name, value))
             }
-            // Backtrack
+
+            // Backtrack if not assignment or stat entry
             current = saved
         }
 
+        // Expression statement (e.g., function call)
         val expr = expression()
         consume(TokenType.SEMICOLON, "Expect ';' after expression.")
         return Stmt.ExprStmt(expr)
@@ -518,7 +528,7 @@ class Parser(private val tokens: List<Token>) {
         return Stmt.ForStmt(name, collection, block())
     }
 
-    // ---- Expression logic (Standard + Pipeline if needed elsewhere) ----
+    // ---- Expression logic ----
     fun parseExpression(): Expr {
         return expression()
     }
@@ -587,8 +597,6 @@ class Parser(private val tokens: List<Token>) {
         return call()
     }
     private fun call(): Expr {
-        // Handle explicit function call (IDENT + Parens)
-        // or just primary
         if (check(TokenType.IDENTIFIER)) {
             val saved = current
             advance()
