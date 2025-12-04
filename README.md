@@ -469,7 +469,6 @@ type_expr      ::= "Number"
 
 expression     ::= ...   (* standard expression grammar: literals, identifiers, operators *)
 
-/* A block specifically for logic execution, distinct from structural definitions */
 script_block   ::= "{" { statement } "}" ;
 
 statement      ::= if_stmt
