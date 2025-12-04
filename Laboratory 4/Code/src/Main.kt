@@ -1,111 +1,33 @@
-// Main.kt
-import java.util.Scanner
+import java.io.File
 
-fun main() {
-    val stdin = Scanner(System.`in`)
-    val buffer = mutableListOf<String>()
+fun main(args: Array<String>) {
+    val scriptPath = if (args.isNotEmpty()) args[0] else "Text.txt"
 
-    println("Game DSL Parser - Commands:")
-    println("  :tokens   - Show tokenized output")
-    println("  :parse    - Parse and show AST")
-    println("  :evaluate - Evaluate an expression")
-    println("  :run      - Parse and evaluate full program")
-    println("  :clear    - Clear buffer")
-    println("  :q/:quit  - Exit")
-    println()
+    // Read the content of the script file
+    val script = File(scriptPath).readLines()
 
-    loop@ while (true) {
-        print("> ")
-        if (!stdin.hasNextLine()) break@loop
-
-        val raw = stdin.nextLine()
-        val cmd = raw.trim()
-
-        when (cmd) {
-            ":q", ":quit" -> break@loop
-
-            ":clear" -> {
-                buffer.clear()
-                println("[ok] Buffer cleared.")
-                continue@loop
-            }
-
-            ":tokens" -> {
-                if (buffer.isEmpty()) {
-                    println("[tokens] Buffer is empty.")
-                    continue@loop
-                }
-                Tokenizer.tokenizeBlock(buffer)
-                continue@loop
-            }
-
-            ":parse" -> {
-                if (buffer.isEmpty()) {
-                    println("[parse] Buffer is empty.")
-                    continue@loop
-                }
-
-                try {
-                    val tokens = Tokenizer.tokenizeToTokens(buffer)
-                    val parser = Parser(tokens)
-                    val program = parser.parseProgram()
-                    AstPrinter().print(program)
-                } catch (ex: Exception) {
-                    println("[parse] Failed: ${ex.message}")
-                    ex.printStackTrace()
-                }
-
-                buffer.clear()
-                continue@loop
-            }
-
-            ":evaluate" -> {
-                if (buffer.isEmpty()) {
-                    println("[evaluate] Buffer is empty.")
-                    continue@loop
-                }
-
-                try {
-                    val tokens = Tokenizer.tokenizeToTokens(buffer)
-                    val parser = Parser(tokens)
-                    val expr = parser.parseExpression()
-                    val evaluator = Evaluator()
-                    val result = evaluator.evaluate(expr)
-                    println("Result: $result")
-                } catch (ex: Exception) {
-                    println("[evaluate] Failed: ${ex.message}")
-                    ex.printStackTrace()
-                }
-
-                buffer.clear()
-                continue@loop
-            }
-
-            ":run" -> {
-                if (buffer.isEmpty()) {
-                    println("[run] Buffer is empty.")
-                    continue@loop
-                }
-
-                try {
-                    val tokens = Tokenizer.tokenizeToTokens(buffer)
-                    val parser = Parser(tokens)
-                    val program = parser.parseProgram()
-                    val evaluator = Evaluator()
-                    evaluator.evaluateProgram(program)
-                } catch (ex: Exception) {
-                    println("[run] Failed: ${ex.message}")
-                    ex.printStackTrace()
-                }
-
-                buffer.clear()
-                continue@loop
-            }
-        }
-
-        // If not a command, treat as source code line
-        buffer.add(raw)
+    // Check if the file exists and if not, print an error and exit
+    if (!File(scriptPath).exists()) {
+        println("Error: The file $scriptPath does not exist.")
+        return
     }
 
-    println("Goodbye!")
+    // Tokenize the script lines
+    val tokens = Tokenizer.tokenizeToTokens(script)
+
+    // Parse the tokens into an Abstract Syntax Tree (AST)
+    try {
+        val parser = Parser(tokens)
+        val program = parser.parseProgram()
+
+
+        val evaluator = Evaluator()
+        evaluator.evaluateProgram(program)
+
+    } catch (ex: Exception) {
+        println("[Error] Failed to parse or evaluate the script: ${ex.message}")
+        ex.printStackTrace()
+    }
+
+    println("Program execution completed.")
 }

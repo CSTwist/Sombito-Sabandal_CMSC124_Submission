@@ -7,12 +7,13 @@ enum class TokenType {
     // Operators
     PLUS, MINUS, STAR, DIVIDE,
     EQUAL, EQUAL_EQUAL,
-    BANG_EQUAL,
+    BANG, BANG_EQUAL,
     LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
-    PIPE_GREATER, // |>
+    PIPE_GREATER,
+    AND, OR,
 
     // Keywords - Top Level
-    GAME, HEROES, ARENA, STATUS_EFFECTS, ITEMS, CREEPS,
+    GAME, HEROES, ARENA, STATUS_EFFECTS, ITEMS, CREEPS, FUNCTIONS,
     IMPORT, CONST,
 
     // Keywords - Hero
@@ -22,19 +23,25 @@ enum class TokenType {
     ABILITY, TYPE, COOLDOWN, MANA_COST, RANGE, DAMAGE_TYPE, BEHAVIOR,
 
     // Keywords - Arena
-    TEAM, TURRET, CORE,
+    TEAM, TURRET, CORE, TURRETS, // Added TURRETS for "turrets: { }"
 
     // Keywords - Status Effect
-    STATUS_EFFECT, DURATION, ON_APPLY, ON_TICK,
+    STATUS_EFFECT, DURATION, ON_APPLY, ON_TICK, ON_EXPIRE,
 
     // Keywords - Item
-    ITEM, EFFECT,
+    ITEM, PASSIVE, // Added PASSIVE
 
     // Keywords - Creep
     CREEP,
 
     // Keywords - Behavior/Targets
     APPLY, TO, SELF, TARGET, CASTER,
+
+    // Keywords - Control Flow & Functions
+    IF, ELSE,
+    WHILE, FOR, IN, // Added IN for "for x in y"
+    RETURN,
+    FUNCTION, // Lowercase "function" for defs
 
     // Literals
     STRING, NUMBER, IDENTIFIER,
@@ -62,6 +69,7 @@ fun classifyLexeme(lexeme: String): TokenType {
         "/" -> TokenType.DIVIDE
         "=" -> TokenType.EQUAL
         "==" -> TokenType.EQUAL_EQUAL
+        "!" -> TokenType.BANG
         "!=" -> TokenType.BANG_EQUAL
         "<" -> TokenType.LESS
         "<=" -> TokenType.LESS_EQUAL
@@ -76,6 +84,7 @@ fun classifyLexeme(lexeme: String): TokenType {
         "StatusEffects" -> TokenType.STATUS_EFFECTS
         "Items" -> TokenType.ITEMS
         "Creeps" -> TokenType.CREEPS
+        "Functions" -> TokenType.FUNCTIONS
         "import" -> TokenType.IMPORT
         "const" -> TokenType.CONST
 
@@ -98,6 +107,7 @@ fun classifyLexeme(lexeme: String): TokenType {
         // Keywords - Arena
         "team" -> TokenType.TEAM
         "turret" -> TokenType.TURRET
+        "turrets" -> TokenType.TURRETS
         "core" -> TokenType.CORE
 
         // Keywords - Status Effect
@@ -105,10 +115,11 @@ fun classifyLexeme(lexeme: String): TokenType {
         "duration" -> TokenType.DURATION
         "on_apply" -> TokenType.ON_APPLY
         "on_tick" -> TokenType.ON_TICK
+        "on_expire" -> TokenType.ON_EXPIRE
 
         // Keywords - Item
         "item" -> TokenType.ITEM
-        "effect" -> TokenType.EFFECT
+        "passive" -> TokenType.PASSIVE
 
         // Keywords - Creep
         "creep" -> TokenType.CREEP
@@ -119,6 +130,19 @@ fun classifyLexeme(lexeme: String): TokenType {
         "self" -> TokenType.SELF
         "target" -> TokenType.TARGET
         "caster" -> TokenType.CASTER
+
+        // Keywords - Control Flow & Functions
+        "if" -> TokenType.IF
+        "else" -> TokenType.ELSE
+        "while" -> TokenType.WHILE
+        "for" -> TokenType.FOR
+        "in" -> TokenType.IN
+        "return" -> TokenType.RETURN
+        "function" -> TokenType.FUNCTION
+
+        // Logical keywords
+        "and" -> TokenType.AND
+        "or" -> TokenType.OR
 
         else -> when {
             // Percentage (e.g., "50%")

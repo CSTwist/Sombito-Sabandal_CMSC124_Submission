@@ -8,7 +8,7 @@ sealed interface Decl {
     data class ConstDecl(val type: Token?, val name: Token, val value: Expr) : Decl
 
     /** set IDENTIFIER = expression */
-    data class VarDecl(val name: Token, val value: Expr) : Decl  // NEW
+    data class VarDecl(val name: Token, val value: Expr) : Decl
 
     /** hero IDENTIFIER { hero_body } */
     data class HeroDecl(
@@ -22,14 +22,18 @@ sealed interface Decl {
         val stats: List<StatEntry>
     ) : Decl
 
-    /** core IDENTIFIER { stat_entries } */
+    /** core IDENTIDENTIFIER { stat_entries } */
     data class CoreDecl(
         val name: Token,
         val stats: List<StatEntry>
     ) : Decl
 
-    /** const team IDENTIFIER */
-    data class TeamDecl(val name: Token) : Decl
+    /** team IDENTIFIER { [core ref] [turrets block] } */
+    data class TeamDecl(
+        val name: Token,
+        val coreRef: Token?,
+        val turrets: List<TurretDecl>
+    ) : Decl
 
     /** statusEffect IDENTIFIER { status_effect_body } */
     data class StatusEffectDecl(
@@ -48,33 +52,121 @@ sealed interface Decl {
         val name: Token,
         val stats: List<StatEntry>
     ) : Decl
+
+    /** function IDENTIFIER (params) : type { body } */
+    data class FunctionDecl(
+        val name: Token,
+        val params: List<Param>,
+        val returnType: Token?, // e.g. Number, Boolean
+        val body: BlockStmt
+    ) : Decl
 }
 
-// Hero-specific statements
+data class Param(val type: Token, val name: Token)
+
+// ========================= HERO STATEMENTS =========================
+
 sealed interface HeroStatement {
+
     data class SetStmt(val name: Token, val value: Expr) : HeroStatement
+
     data class HeroStatBlock(val stats: List<StatEntry>) : HeroStatement
-    data class ScalingCall(val param1: Token, val param2: Token) : HeroStatement
+
     data class AbilitiesBlock(val abilities: List<AbilityDecl>) : HeroStatement
 }
 
-// Ability declaration
+
+// ========================= ABILITIES =========================
+
 data class AbilityDecl(
     val name: Token,
     val fields: List<AbilityField>
 )
 
 sealed interface AbilityField {
+
     data class TypeField(val value: Token) : AbilityField
+
     data class CooldownField(val value: Expr) : AbilityField
+
     data class ManaCostField(val value: Expr) : AbilityField
+
     data class RangeField(val value: Expr) : AbilityField
+
     data class DamageTypeField(val value: Token) : AbilityField
-    data class BehaviorField(val pipeline: PipelineExpr) : AbilityField
+
+    /**
+     * Behavior: Can be a block or a pipeline expression
+     */
+    data class BehaviorField(
+        val body: BlockStmt?, // If it's a script block
+        val expression: Expr? // If it's a pipeline expression
+    ) : AbilityField
 }
 
-// Behavior pipeline
-data class PipelineExpr(val calls: List<FunctionCall>)
+
+// ========================= STATUS EFFECT =========================
+
+sealed interface StatusEffectField {
+
+    data class TypeField(val value: Token) : StatusEffectField
+
+    data class DurationField(val value: Expr) : StatusEffectField
+
+    data class OnApplyField(val block: BlockStmt) : StatusEffectField
+
+    data class OnTickField(val block: BlockStmt) : StatusEffectField
+
+    data class OnExpireField(val block: BlockStmt) : StatusEffectField
+}
+
+
+// ========================= ITEM =========================
+
+sealed interface ItemField {
+
+    data class PropertyField(val name: Token, val value: Expr) : ItemField
+
+    /**
+     * passive: { behavior: ... }
+     * Uses a pipeline expression
+     */
+    data class PassiveField(val behavior: Expr) : ItemField
+}
+
+
+// ========================= STATEMENTS =========================
+
+sealed interface Stmt {
+
+    data class ApplyStmt(val call: FunctionCall, val target: TargetExpr) : Stmt
+
+    data class StatEntryStmt(val entry: StatEntry) : Stmt
+
+    data class SetStmt(val name: Token, val value: Expr) : Stmt
+
+    data class ConstDeclStmt(val type: Token, val name: Token, val value: Expr) : Stmt
+
+    data class FunctionCallStmt(val call: FunctionCall) : Stmt
+
+    data class ExprStmt(val expr: Expr) : Stmt
+
+    // Control flow
+    data class IfStmt(val condition: Expr, val thenBranch: BlockStmt, val elseBranch: BlockStmt?) : Stmt
+
+    data class WhileStmt(val condition: Expr, val body: BlockStmt) : Stmt
+
+    data class ForStmt(val variable: Token, val collection: Expr, val body: BlockStmt) : Stmt
+
+    data class ReturnStmt(val keyword: Token, val value: Expr?) : Stmt
+}
+
+
+// A block contains List<Stmt>
+data class BlockStmt(val statements: List<Stmt>)
+
+
+// ========================= FUNCTION CALLS =========================
 
 data class FunctionCall(
     val name: Token,
@@ -82,34 +174,14 @@ data class FunctionCall(
 )
 
 sealed interface Argument {
+
     data class NamedArg(val name: Token, val value: Expr) : Argument
+
     data class PositionalArg(val value: Expr) : Argument
 }
 
-// Status effect fields
-sealed interface StatusEffectField {
-    data class TypeField(val value: Token) : StatusEffectField
-    data class DurationField(val value: Expr) : StatusEffectField
-    data class OnApplyField(val block: BlockStmt) : StatusEffectField
-    data class OnTickField(val block: BlockStmt) : StatusEffectField
-}
 
-// Item fields
-sealed interface ItemField {
-    data class PropertyField(val name: Token, val value: Expr) : ItemField
-    data class EffectField(val pipeline: PipelineExpr) : ItemField
-}
-
-// Statements
-sealed interface Stmt {
-    data class ApplyStmt(val call: FunctionCall, val target: TargetExpr) : Stmt
-    data class PipelineStmt(val pipeline: PipelineExpr) : Stmt
-    data class SetStmt(val name: Token, val value: Expr) : Stmt
-    data class StatEntryStmt(val entry: StatEntry) : Stmt
-    data class FunctionCallStmt(val call: FunctionCall) : Stmt
-}
-
-data class BlockStmt(val statements: List<Stmt>)
+// ========================= TARGET EXPRESSIONS =========================
 
 sealed interface TargetExpr {
     object Self : TargetExpr
@@ -118,5 +190,7 @@ sealed interface TargetExpr {
     data class Named(val name: Token) : TargetExpr
 }
 
-// Stat entry: IDENTIFIER : expression
+
+// ========================= MISC =========================
+
 data class StatEntry(val name: Token, val value: Expr)

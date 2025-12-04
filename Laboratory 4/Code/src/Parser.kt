@@ -3,29 +3,39 @@ class Parser(private val tokens: List<Token>) {
 
     private var current = 0
 
-    // ---- Entry Point: program = "GAME" "{" game_body "}" ----
-    // Parser.kt - Updated parseProgram() method
+    // ---- Entry Point: [imports] "GAME" IDENT { game_body } ----
     fun parseProgram(): Program {
-        consume(TokenType.GAME, "Expect 'GAME' at start of program.")
-        consume(TokenType.LEFT_BRACE, "Expect '{' after 'GAME'.")
 
+        // 1. Imports
         val imports = mutableListOf<Decl.ImportDecl>()
+        while (match(TokenType.IMPORT)) {
+            imports.add(importDecl())
+        }
+
+        // 2. Game Header
+        consume(TokenType.GAME, "Expect 'GAME' keyword.")
+        val gameName = consume(TokenType.IDENTIFIER, "Expect game name identifier.")
+        consume(TokenType.LEFT_BRACE, "Expect '{' after game name.")
+
+        // 3. Game Body
         val heroes = mutableListOf<Decl.HeroDecl>()
         val arenaItems = mutableListOf<Decl>()
+        val teams = mutableListOf<Decl.TeamDecl>()
         val statusEffects = mutableListOf<Decl.StatusEffectDecl>()
         val items = mutableListOf<Decl.ItemDecl>()
         val creeps = mutableListOf<Decl.CreepDecl>()
-        val variables = mutableListOf<Decl.VarDecl>()  // NEW: Store set statements
+        val variables = mutableListOf<Decl.VarDecl>()
+        val functions = mutableListOf<Decl.FunctionDecl>()
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             when {
-                match(TokenType.IMPORT) -> imports.add(importDecl())
-                match(TokenType.SET) -> variables.add(setDecl())  // NEW: Handle set at top level
+                match(TokenType.SET) -> variables.add(setDecl())
                 match(TokenType.HEROES) -> parseHeroesBlock(heroes)
-                match(TokenType.ARENA) -> parseArenaBlock(arenaItems)
+                match(TokenType.ARENA) -> parseArenaBlock(arenaItems, teams)
                 match(TokenType.STATUS_EFFECTS) -> parseStatusEffectsBlock(statusEffects)
                 match(TokenType.ITEMS) -> parseItemsBlock(items)
                 match(TokenType.CREEPS) -> parseCreepsBlock(creeps)
+                match(TokenType.FUNCTIONS) -> parseFunctionsBlock(functions)
                 else -> {
                     error(peek(), "Unexpected token in game body: '${peek().lexeme}'")
                     advance()
@@ -34,582 +44,634 @@ class Parser(private val tokens: List<Token>) {
         }
 
         consume(TokenType.RIGHT_BRACE, "Expect '}' after game body.")
-        return Program(imports, variables, heroes, arenaItems, statusEffects, items, creeps)
-    }
-
-    // NEW: Parse set declarations at top level
-    private fun setDecl(): Decl.VarDecl {
-        val name = consume(TokenType.IDENTIFIER, "Expect identifier after 'set'.")
-        consume(TokenType.EQUAL, "Expect '=' after identifier.")
-        val value = expression()
-        return Decl.VarDecl(name, value)
+        return Program(gameName, imports, variables, heroes, arenaItems, teams, statusEffects, items, creeps, functions)
     }
 
     // ---- Import: import IDENTIFIER ; ----
     private fun importDecl(): Decl.ImportDecl {
+        // 'import' already consumed
         val name = consume(TokenType.IDENTIFIER, "Expect identifier after 'import'.")
         consume(TokenType.SEMICOLON, "Expect ';' after import statement.")
         return Decl.ImportDecl(name)
     }
 
-    // ---- Heroes Block: Heroes { { hero_decl } } ----
+    // ---- Set: set IDENT = EXPR ; ----
+    private fun setDecl(): Decl.VarDecl {
+        val name = consume(TokenType.IDENTIFIER, "Expect identifier after 'set'.")
+        consume(TokenType.EQUAL, "Expect '=' after identifier.")
+        val value = expression()
+        consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        return Decl.VarDecl(name, value)
+    }
+
+    // ---- Functions Block ----
+    private fun parseFunctionsBlock(functions: MutableList<Decl.FunctionDecl>) {
+        consume(TokenType.LEFT_BRACE, "Expect '{' after 'Functions'.")
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            if (match(TokenType.FUNCTION)) {
+                functions.add(functionDecl())
+            } else {
+                error(peek(), "Expect 'function' in Functions block.")
+                advance()
+            }
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after Functions block.")
+    }
+
+    private fun functionDecl(): Decl.FunctionDecl {
+        val name = consume(TokenType.IDENTIFIER, "Expect function name.")
+        consume(TokenType.LEFT_PAREN, "Expect '(' after function name.")
+
+        val params = mutableListOf<Param>()
+        if (!check(TokenType.RIGHT_PAREN)) {
+            do {
+                // Grammar: type_expr IDENT
+                // But generally parsers do IDENT : type.
+                // The provided grammar says: param ::= type_expr IDENT
+                // Let's follow grammar strictly.
+                val type = parseTypeExpr()
+                val paramName = consume(TokenType.IDENTIFIER, "Expect parameter name.")
+                params.add(Param(type, paramName))
+            } while (match(TokenType.COMMA))
+        }
+        consume(TokenType.RIGHT_PAREN, "Expect ')' after params.")
+
+        var returnType: Token? = null
+        if (match(TokenType.COLON)) {
+            returnType = parseTypeExpr()
+        }
+
+        val body = block()
+        return Decl.FunctionDecl(name, params, returnType, body)
+    }
+
+    private fun parseTypeExpr(): Token {
+        if (match(TokenType.IDENTIFIER)) return previous() // e.g. Number, Boolean
+        // Fallback if specific tokens are used for types, but IDENTIFIER usually covers custom types
+        error(peek(), "Expect type name.")
+        return Token(TokenType.INVALID, "", null, 0)
+    }
+
+    // ---- Heroes Block ----
     private fun parseHeroesBlock(heroes: MutableList<Decl.HeroDecl>) {
         consume(TokenType.LEFT_BRACE, "Expect '{' after 'Heroes'.")
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             if (match(TokenType.HERO)) {
                 heroes.add(heroDecl())
             } else {
-                error(peek(), "Expect 'hero' declaration in Heroes block.")
+                error(peek(), "Expect 'hero' declaration.")
                 advance()
             }
         }
         consume(TokenType.RIGHT_BRACE, "Expect '}' after Heroes block.")
     }
 
-    // ---- Hero Declaration: hero IDENTIFIER { hero_body } ----
     private fun heroDecl(): Decl.HeroDecl {
         val name = consume(TokenType.IDENTIFIER, "Expect hero name.")
         consume(TokenType.LEFT_BRACE, "Expect '{' after hero name.")
-
         val statements = mutableListOf<HeroStatement>()
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             statements.add(heroStatement())
         }
-
         consume(TokenType.RIGHT_BRACE, "Expect '}' after hero body.")
         return Decl.HeroDecl(name, statements)
     }
 
-    // ---- Hero Statement ----
     private fun heroStatement(): HeroStatement {
         return when {
             match(TokenType.SET) -> {
-                val name = consume(TokenType.IDENTIFIER, "Expect identifier after 'set'.")
-                consume(TokenType.EQUAL, "Expect '=' after identifier.")
+                val name = consume(TokenType.IDENTIFIER, "Expect identifier.")
+                consume(TokenType.EQUAL, "Expect '='.")
                 val value = expression()
+                consume(TokenType.SEMICOLON, "Expect ';' after set.")
                 HeroStatement.SetStmt(name, value)
             }
             match(TokenType.HERO_STAT) -> {
-                consume(TokenType.COLON, "Expect ':' after 'heroStat'.")
-                consume(TokenType.LEFT_BRACE, "Expect '{' after ':'.")
+                consume(TokenType.COLON, "Expect ':'.")
+                consume(TokenType.LEFT_BRACE, "Expect '{'.")
                 val stats = mutableListOf<StatEntry>()
                 while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
                     stats.add(statEntry())
                 }
-                consume(TokenType.RIGHT_BRACE, "Expect '}' after stat entries.")
+                consume(TokenType.RIGHT_BRACE, "Expect '}'.")
                 HeroStatement.HeroStatBlock(stats)
             }
-            match(TokenType.SCALING) -> {
-                consume(TokenType.LEFT_PAREN, "Expect '(' after 'scaling'.")
-                val param1 = consume(TokenType.IDENTIFIER, "Expect first parameter.")
-                consume(TokenType.COMMA, "Expect ',' between parameters.")
-                val param2 = consume(TokenType.IDENTIFIER, "Expect second parameter.")
-                consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.")
-                HeroStatement.ScalingCall(param1, param2)
-            }
             match(TokenType.ABILITIES) -> {
-                consume(TokenType.COLON, "Expect ':' after 'abilities'.")
-                consume(TokenType.LEFT_BRACE, "Expect '{' after ':'.")
+                consume(TokenType.COLON, "Expect ':'.")
+                consume(TokenType.LEFT_BRACE, "Expect '{'.")
                 val abilities = mutableListOf<AbilityDecl>()
                 while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
                     if (match(TokenType.ABILITY)) {
                         abilities.add(abilityDecl())
                     } else {
-                        error(peek(), "Expect 'ability' in abilities block.")
+                        error(peek(), "Expect 'ability' definition.")
                         advance()
                     }
                 }
-                consume(TokenType.RIGHT_BRACE, "Expect '}' after abilities.")
+                consume(TokenType.RIGHT_BRACE, "Expect '}'.")
                 HeroStatement.AbilitiesBlock(abilities)
             }
             else -> {
-                error(peek(), "Unexpected token in hero body: '${peek().lexeme}'")
+                error(peek(), "Unexpected token in hero body.")
                 advance()
-                HeroStatement.SetStmt(
-                    Token(TokenType.IDENTIFIER, "error", null, peek().line),
-                    Expr.Literal(null)
-                )
+                HeroStatement.SetStmt(Token(TokenType.INVALID, "", null, 0), Expr.Literal(null))
             }
         }
     }
 
-    // ---- Stat Entry: IDENTIFIER : expression ----
-    private fun statEntry(): StatEntry {
-        val name = consume(TokenType.IDENTIFIER, "Expect stat name.")
-        consume(TokenType.COLON, "Expect ':' after stat name.")
-        val value = expression()
-        return StatEntry(name, value)
-    }
-
-    // ---- Ability Declaration ----
     private fun abilityDecl(): AbilityDecl {
         val name = consume(TokenType.IDENTIFIER, "Expect ability name.")
-        consume(TokenType.LEFT_BRACE, "Expect '{' after ability name.")
-
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
         val fields = mutableListOf<AbilityField>()
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             fields.add(abilityField())
         }
-
-        consume(TokenType.RIGHT_BRACE, "Expect '}' after ability body.")
+        consume(TokenType.RIGHT_BRACE, "Expect '}'.")
         return AbilityDecl(name, fields)
     }
 
-    // ---- Ability Field ----
     private fun abilityField(): AbilityField {
         return when {
             match(TokenType.TYPE) -> {
-                consume(TokenType.COLON, "Expect ':' after 'type'.")
-                val value = consume(TokenType.IDENTIFIER, "Expect type identifier.")
-                AbilityField.TypeField(value)
+                consume(TokenType.COLON, "Expect ':'.")
+                AbilityField.TypeField(consume(TokenType.IDENTIFIER, "Expect type."))
             }
             match(TokenType.COOLDOWN) -> {
-                consume(TokenType.COLON, "Expect ':' after 'cooldown'.")
+                consume(TokenType.COLON, "Expect ':'.")
                 AbilityField.CooldownField(expression())
             }
             match(TokenType.MANA_COST) -> {
-                consume(TokenType.COLON, "Expect ':' after 'mana_cost'.")
+                consume(TokenType.COLON, "Expect ':'.")
                 AbilityField.ManaCostField(expression())
             }
             match(TokenType.RANGE) -> {
-                consume(TokenType.COLON, "Expect ':' after 'range'.")
+                consume(TokenType.COLON, "Expect ':'.")
                 AbilityField.RangeField(expression())
             }
             match(TokenType.DAMAGE_TYPE) -> {
-                consume(TokenType.COLON, "Expect ':' after 'damage_type'.")
-                val value = consume(TokenType.IDENTIFIER, "Expect damage type identifier.")
-                AbilityField.DamageTypeField(value)
+                consume(TokenType.COLON, "Expect ':'.")
+                AbilityField.DamageTypeField(consume(TokenType.IDENTIFIER, "Expect damage type."))
             }
             match(TokenType.BEHAVIOR) -> {
-                consume(TokenType.COLON, "Expect ':' after 'behavior'.")
-                AbilityField.BehaviorField(pipelineExpr())
+                consume(TokenType.COLON, "Expect ':'.")
+                // behavior: { ... } OR behavior: func() |> func()
+                if (check(TokenType.LEFT_BRACE)) {
+                    AbilityField.BehaviorField(block(), null)
+                } else {
+                    AbilityField.BehaviorField(null, pipelineExpr())
+                }
             }
             else -> {
-                error(peek(), "Unexpected token in ability body: '${peek().lexeme}'")
+                error(peek(), "Unexpected in ability.")
                 advance()
-                AbilityField.TypeField(Token(TokenType.IDENTIFIER, "error", null, peek().line))
+                AbilityField.TypeField(Token(TokenType.INVALID, "", null, 0))
             }
         }
     }
 
-    // ---- Pipeline Expression: function_call { |> function_call } ----
-    private fun pipelineExpr(): PipelineExpr {
-        val calls = mutableListOf<FunctionCall>()
-        calls.add(functionCall())
+    // ---- Pipeline Expression: func() |> func() ----
+    private fun pipelineExpr(): Expr {
+        // Grammar: behavior_expr ::= pipeline_expr
+        // pipeline_expr ::= function_call { "|>" function_call }
+
+        var expr: Expr = Expr.FunctionCallExpr(functionCall())
 
         while (match(TokenType.PIPE_GREATER)) {
-            calls.add(functionCall())
+            val op = previous()
+            val rightCall = functionCall()
+            val rightExpr = Expr.FunctionCallExpr(rightCall)
+            // Treat pipeline as a binary op for evaluation purposes
+            expr = Expr.Binary(expr, op, rightExpr)
         }
-
-        return PipelineExpr(calls)
-    }
-
-    // ---- Function Call: IDENTIFIER ( [ argument_list ] ) ----
-    private fun functionCall(): FunctionCall {
-        val name = consume(TokenType.IDENTIFIER, "Expect function name.")
-        consume(TokenType.LEFT_PAREN, "Expect '(' after function name.")
-
-        val arguments = mutableListOf<Argument>()
-        if (!check(TokenType.RIGHT_PAREN)) {
-            do {
-                arguments.add(argument())
-            } while (match(TokenType.COMMA))
-        }
-
-        consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.")
-        return FunctionCall(name, arguments)
-    }
-
-    // ---- Argument: IDENTIFIER : expression | expression ----
-    private fun argument(): Argument {
-        // Try to parse as named argument (IDENTIFIER : expression)
-        if (check(TokenType.IDENTIFIER)) {
-            val saved = current
-            val name = advance()
-            if (match(TokenType.COLON)) {
-                val value = expression()
-                return Argument.NamedArg(name, value)
-            } else {
-                // Backtrack - it's a positional argument
-                current = saved
-            }
-        }
-        return Argument.PositionalArg(expression())
+        return expr
     }
 
     // ---- Arena Block ----
-    private fun parseArenaBlock(arenaItems: MutableList<Decl>) {
-        consume(TokenType.LEFT_BRACE, "Expect '{' after 'Arena'.")
-
+    private fun parseArenaBlock(arenaItems: MutableList<Decl>, teams: MutableList<Decl.TeamDecl>) {
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
             when {
-                match(TokenType.CONST) -> {
-                    if (match(TokenType.TEAM)) {
-                        val name = consume(TokenType.IDENTIFIER, "Expect team name.")
-                        arenaItems.add(Decl.TeamDecl(name))
-                    } else {
-                        error(peek(), "Expect 'team' after 'const' in Arena block.")
-                        advance()
-                    }
-                }
-                match(TokenType.TURRET) -> {
-                    val name = consume(TokenType.IDENTIFIER, "Expect turret name.")
-                    consume(TokenType.LEFT_BRACE, "Expect '{' after turret name.")
-                    val stats = mutableListOf<StatEntry>()
-                    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-                        stats.add(statEntry())
-                    }
-                    consume(TokenType.RIGHT_BRACE, "Expect '}' after turret stats.")
-                    arenaItems.add(Decl.TurretDecl(name, stats))
-                }
-                match(TokenType.CORE) -> {
-                    val name = consume(TokenType.IDENTIFIER, "Expect core name.")
-                    consume(TokenType.LEFT_BRACE, "Expect '{' after core name.")
-                    val stats = mutableListOf<StatEntry>()
-                    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-                        stats.add(statEntry())
-                    }
-                    consume(TokenType.RIGHT_BRACE, "Expect '}' after core stats.")
-                    arenaItems.add(Decl.CoreDecl(name, stats))
-                }
+                match(TokenType.TEAM) -> teams.add(teamDecl())
+                match(TokenType.TURRET) -> arenaItems.add(turretDecl())
+                match(TokenType.CORE) -> arenaItems.add(coreDecl())
                 else -> {
-                    error(peek(), "Unexpected token in Arena block.")
+                    error(peek(), "Unexpected in Arena.")
                     advance()
                 }
             }
         }
-
-        consume(TokenType.RIGHT_BRACE, "Expect '}' after Arena block.")
+        consume(TokenType.RIGHT_BRACE, "Expect '}'.")
     }
 
-    // ---- Status Effects Block ----
-    private fun parseStatusEffectsBlock(statusEffects: MutableList<Decl.StatusEffectDecl>) {
-        consume(TokenType.LEFT_BRACE, "Expect '{' after 'StatusEffects'.")
+    private fun teamDecl(): Decl.TeamDecl {
+        // team IDENT { [core ref] [turrets block] }
+        val name = consume(TokenType.IDENTIFIER, "Expect team name.")
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
+
+        var coreRef: Token? = null
+        val turrets = mutableListOf<Decl.TurretDecl>()
 
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            if (match(TokenType.STATUS_EFFECT)) {
-                statusEffects.add(statusEffectDecl())
-            } else {
-                error(peek(), "Expect 'statusEffect' in StatusEffects block.")
-                advance()
+            when {
+                match(TokenType.CORE) -> {
+                    coreRef = consume(TokenType.IDENTIFIER, "Expect core name ref.")
+                }
+                match(TokenType.TURRETS) -> {
+                    consume(TokenType.COLON, "Expect ':'.")
+                    consume(TokenType.LEFT_BRACE, "Expect '{'.")
+                    while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+                        if (match(TokenType.TURRET)) {
+                            turrets.add(turretDecl())
+                        } else {
+                            error(peek(), "Expect 'turret' definition.")
+                            advance()
+                        }
+                    }
+                    consume(TokenType.RIGHT_BRACE, "Expect '}' after turrets.")
+                }
+                else -> {
+                    error(peek(), "Unexpected inside Team.")
+                    advance()
+                }
             }
         }
+        consume(TokenType.RIGHT_BRACE, "Expect '}' after Team.")
+        return Decl.TeamDecl(name, coreRef, turrets)
+    }
 
-        consume(TokenType.RIGHT_BRACE, "Expect '}' after StatusEffects block.")
+    private fun turretDecl(): Decl.TurretDecl {
+        val name = consume(TokenType.IDENTIFIER, "Expect turret name.")
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
+        val stats = mutableListOf<StatEntry>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            stats.add(statEntry())
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}'.")
+        return Decl.TurretDecl(name, stats)
+    }
+
+    private fun coreDecl(): Decl.CoreDecl {
+        val name = consume(TokenType.IDENTIFIER, "Expect core name.")
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
+        val stats = mutableListOf<StatEntry>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            stats.add(statEntry())
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}'.")
+        return Decl.CoreDecl(name, stats)
+    }
+
+    // ---- Status Effects ----
+    private fun parseStatusEffectsBlock(effects: MutableList<Decl.StatusEffectDecl>) {
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            if (match(TokenType.STATUS_EFFECT)) effects.add(statusEffectDecl())
+            else { error(peek(), "Expect statusEffect."); advance() }
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}'.")
     }
 
     private fun statusEffectDecl(): Decl.StatusEffectDecl {
-        val name = consume(TokenType.IDENTIFIER, "Expect status effect name.")
-        consume(TokenType.LEFT_BRACE, "Expect '{' after status effect name.")
-
+        val name = consume(TokenType.IDENTIFIER, "Expect name.")
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
         val fields = mutableListOf<StatusEffectField>()
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            fields.add(statusEffectField())
+            when {
+                match(TokenType.TYPE) -> {
+                    consume(TokenType.COLON, "Expect ':'.")
+                    fields.add(StatusEffectField.TypeField(consume(TokenType.IDENTIFIER, "Expect type.")))
+                }
+                match(TokenType.DURATION) -> {
+                    consume(TokenType.COLON, "Expect ':'.")
+                    fields.add(StatusEffectField.DurationField(expression()))
+                }
+                match(TokenType.ON_APPLY) -> {
+                    consume(TokenType.COLON, "Expect ':'.")
+                    fields.add(StatusEffectField.OnApplyField(block()))
+                }
+                match(TokenType.ON_TICK) -> {
+                    consume(TokenType.COLON, "Expect ':'.")
+                    fields.add(StatusEffectField.OnTickField(block()))
+                }
+                match(TokenType.ON_EXPIRE) -> {
+                    consume(TokenType.COLON, "Expect ':'.")
+                    fields.add(StatusEffectField.OnExpireField(block()))
+                }
+                else -> { error(peek(), "Unexpected field."); advance() }
+            }
         }
-
-        consume(TokenType.RIGHT_BRACE, "Expect '}' after status effect body.")
+        consume(TokenType.RIGHT_BRACE, "Expect '}'.")
         return Decl.StatusEffectDecl(name, fields)
     }
 
-    private fun statusEffectField(): StatusEffectField {
-        return when {
-            match(TokenType.TYPE) -> {
-                consume(TokenType.COLON, "Expect ':' after 'type'.")
-                val value = consume(TokenType.IDENTIFIER, "Expect type identifier.")
-                StatusEffectField.TypeField(value)
-            }
-            match(TokenType.DURATION) -> {
-                consume(TokenType.COLON, "Expect ':' after 'duration'.")
-                StatusEffectField.DurationField(expression())
-            }
-            match(TokenType.ON_APPLY) -> {
-                consume(TokenType.COLON, "Expect ':' after 'on_apply'.")
-                StatusEffectField.OnApplyField(block())
-            }
-            match(TokenType.ON_TICK) -> {
-                consume(TokenType.COLON, "Expect ':' after 'on_tick'.")
-                StatusEffectField.OnTickField(block())
-            }
-            else -> {
-                error(peek(), "Unexpected token in status effect body.")
-                advance()
-                StatusEffectField.TypeField(Token(TokenType.IDENTIFIER, "error", null, peek().line))
-            }
-        }
-    }
-
-    // ---- Block: { { statement } } ----
-    private fun block(): BlockStmt {
-        consume(TokenType.LEFT_BRACE, "Expect '{' for block.")
-        val statements = mutableListOf<Stmt>()
-
+    // ---- Items ----
+    private fun parseItemsBlock(items: MutableList<Decl.ItemDecl>) {
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
         while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            statements.add(statement())
+            if (match(TokenType.ITEM)) items.add(itemDecl())
+            else { error(peek(), "Expect item."); advance() }
         }
-
-        consume(TokenType.RIGHT_BRACE, "Expect '}' after block.")
-        return BlockStmt(statements)
+        consume(TokenType.RIGHT_BRACE, "Expect '}'.")
     }
 
-    // ---- Statement ----
-    private fun statement(): Stmt {
-        return when {
-            match(TokenType.APPLY) -> {
-                val call = functionCall()
-                consume(TokenType.TO, "Expect 'to' after function call.")
-                val target = targetExpr()
-                Stmt.ApplyStmt(call, target)
-            }
-            match(TokenType.SET) -> {
-                val name = consume(TokenType.IDENTIFIER, "Expect identifier after 'set'.")
-                consume(TokenType.EQUAL, "Expect '=' after identifier.")
-                val value = expression()
-                Stmt.SetStmt(name, value)
-            }
-            check(TokenType.IDENTIFIER) -> {
-                // Could be stat entry, function call, or pipeline
-                val saved = current
-                val name = advance()
-                if (match(TokenType.COLON)) {
-                    // It's a stat entry
-                    val value = expression()
-                    Stmt.StatEntryStmt(StatEntry(name, value))
-                } else if (match(TokenType.LEFT_PAREN)) {
-                    // It's a function call - rebuild
-                    current = saved
-                    val call = functionCall()
-                    Stmt.FunctionCallStmt(call)
-                } else {
-                    error(peek(), "Unexpected statement.")
-                    Stmt.SetStmt(name, Expr.Literal(null))
+    private fun itemDecl(): Decl.ItemDecl {
+        val name = consume(TokenType.IDENTIFIER, "Expect name.")
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
+        val fields = mutableListOf<ItemField>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            if (match(TokenType.PASSIVE)) {
+                consume(TokenType.COLON, "Expect ':'.")
+                consume(TokenType.LEFT_BRACE, "Expect '{'.")
+                if (match(TokenType.BEHAVIOR)) {
+                    consume(TokenType.COLON, "Expect ':'.")
+                    val expr = pipelineExpr()
+                    fields.add(ItemField.PassiveField(expr))
                 }
-            }
-            else -> {
-                error(peek(), "Unexpected statement.")
+                consume(TokenType.RIGHT_BRACE, "Expect '}'.")
+            } else if (check(TokenType.IDENTIFIER)) {
+                val propName = advance()
+                consume(TokenType.COLON, "Expect ':'.")
+                fields.add(ItemField.PropertyField(propName, expression()))
+            } else {
+                error(peek(), "Unexpected in item.")
                 advance()
-                Stmt.SetStmt(
-                    Token(TokenType.IDENTIFIER, "error", null, peek().line),
-                    Expr.Literal(null)
-                )
             }
         }
+        consume(TokenType.RIGHT_BRACE, "Expect '}'.")
+        return Decl.ItemDecl(name, fields)
     }
 
-    // ---- Target Expression ----
+    // ---- Creeps ----
+    private fun parseCreepsBlock(creeps: MutableList<Decl.CreepDecl>) {
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            if (match(TokenType.CREEP)) {
+                val name = consume(TokenType.IDENTIFIER, "Expect name.")
+                consume(TokenType.LEFT_BRACE, "Expect '{'.")
+                val stats = mutableListOf<StatEntry>()
+                while(!check(TokenType.RIGHT_BRACE)) stats.add(statEntry())
+                consume(TokenType.RIGHT_BRACE, "Expect '}'.")
+                creeps.add(Decl.CreepDecl(name, stats))
+            } else {
+                error(peek(), "Expect creep."); advance()
+            }
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}'.")
+    }
+
+    // ---- Statements ----
+    private fun block(): BlockStmt {
+        consume(TokenType.LEFT_BRACE, "Expect '{'.")
+        val stmts = mutableListOf<Stmt>()
+        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
+            stmts.add(statement())
+        }
+        consume(TokenType.RIGHT_BRACE, "Expect '}'.")
+        return BlockStmt(stmts)
+    }
+
+    private fun statement(): Stmt {
+        if (match(TokenType.IF)) return ifStatement()
+        if (match(TokenType.WHILE)) return whileStatement()
+        if (match(TokenType.FOR)) return forStatement()
+        if (match(TokenType.RETURN)) {
+            val keyword = previous()
+            val value = if (check(TokenType.SEMICOLON)) null else expression()
+            consume(TokenType.SEMICOLON, "Expect ';'.")
+            return Stmt.ReturnStmt(keyword, value)
+        }
+        if (match(TokenType.CONST)) {
+            val type = parseTypeExpr()
+            val name = consume(TokenType.IDENTIFIER, "Expect name.")
+            consume(TokenType.EQUAL, "Expect '='.")
+            val value = expression()
+            consume(TokenType.SEMICOLON, "Expect ';'.")
+            return Stmt.ConstDeclStmt(type, name, value)
+        }
+        if (match(TokenType.SET)) {
+            val name = consume(TokenType.IDENTIFIER, "Expect name.")
+            consume(TokenType.EQUAL, "Expect '='.")
+            val value = expression()
+            consume(TokenType.SEMICOLON, "Expect ';'.")
+            return Stmt.SetStmt(name, value)
+        }
+        if (match(TokenType.APPLY)) {
+            val call = functionCall()
+            consume(TokenType.TO, "Expect 'to'.")
+            val target = targetExpr()
+            consume(TokenType.SEMICOLON, "Expect ';'.") // Semicolon inferred? Grammar says set_stmt ends in ; but apply not explicit?
+            // Grammar doesn't explicitly put ; on apply, but standard Stmt usually has it.
+            // Grammar: statement ::= ... | expression_stmt. expression_stmt ::= expression ";"
+            // Wait, grammar: behavior_expr ::= pipeline_expr.
+            // script_block ::= "{" { statement } "}".
+            // statement ::= if | loop | set | const | return | expression_stmt.
+            // "apply" is likely a function call expression statement.
+            // But if "Apply" is a keyword, handle it.
+            return Stmt.ApplyStmt(call, target)
+        }
+
+        // Expression statement or assignment or stat entry
+        if (check(TokenType.IDENTIFIER)) {
+            // Lookahead
+            val saved = current
+            val name = advance()
+            if (match(TokenType.COLON)) {
+                // Stat entry: IDENT : EXPR
+                val value = expression()
+                // No semicolon in stat_entry grammar: stat_entry ::= IDENT ":" expression
+                return Stmt.StatEntryStmt(StatEntry(name, value))
+            }
+            // Backtrack
+            current = saved
+        }
+
+        val expr = expression()
+        consume(TokenType.SEMICOLON, "Expect ';' after expression.")
+        return Stmt.ExprStmt(expr)
+    }
+
+    private fun ifStatement(): Stmt {
+        consume(TokenType.LEFT_PAREN, "Expect '('.")
+        val cond = expression()
+        consume(TokenType.RIGHT_PAREN, "Expect ')'.")
+        val thenBranch = block()
+        var elseBranch: BlockStmt? = null
+        if (match(TokenType.ELSE)) {
+            elseBranch = if (check(TokenType.IF)) BlockStmt(listOf(ifStatement())) else block()
+        }
+        return Stmt.IfStmt(cond, thenBranch, elseBranch)
+    }
+
+    private fun whileStatement(): Stmt {
+        consume(TokenType.LEFT_PAREN, "Expect '('.")
+        val cond = expression()
+        consume(TokenType.RIGHT_PAREN, "Expect ')'.")
+        return Stmt.WhileStmt(cond, block())
+    }
+
+    private fun forStatement(): Stmt {
+        consume(TokenType.LEFT_PAREN, "Expect '('.")
+        val name = consume(TokenType.IDENTIFIER, "Expect loop variable.")
+        consume(TokenType.IN, "Expect 'in'.")
+        val collection = expression()
+        consume(TokenType.RIGHT_PAREN, "Expect ')'.")
+        return Stmt.ForStmt(name, collection, block())
+    }
+
+    // ---- Expression logic (Standard + Pipeline if needed elsewhere) ----
+    fun parseExpression(): Expr {
+        return expression()
+    }
+
+    private fun expression(): Expr = or()
+    private fun or(): Expr {
+        var expr = and()
+        while (match(TokenType.OR)) {
+            val op = previous()
+            val right = and()
+            expr = Expr.Logical(expr, op, right)
+        }
+        return expr
+    }
+    private fun and(): Expr {
+        var expr = equality()
+        while (match(TokenType.AND)) {
+            val op = previous()
+            val right = equality()
+            expr = Expr.Logical(expr, op, right)
+        }
+        return expr
+    }
+    private fun equality(): Expr {
+        var expr = comparison()
+        while (match(TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL)) {
+            val op = previous()
+            val right = comparison()
+            expr = Expr.Binary(expr, op, right)
+        }
+        return expr
+    }
+    private fun comparison(): Expr {
+        var expr = term()
+        while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+            val op = previous()
+            val right = term()
+            expr = Expr.Binary(expr, op, right)
+        }
+        return expr
+    }
+    private fun term(): Expr {
+        var expr = factor()
+        while (match(TokenType.PLUS, TokenType.MINUS)) {
+            val op = previous()
+            val right = factor()
+            expr = Expr.Binary(expr, op, right)
+        }
+        return expr
+    }
+    private fun factor(): Expr {
+        var expr = unary()
+        while (match(TokenType.STAR, TokenType.DIVIDE)) {
+            val op = previous()
+            val right = unary()
+            expr = Expr.Binary(expr, op, right)
+        }
+        return expr
+    }
+    private fun unary(): Expr {
+        if (match(TokenType.BANG, TokenType.MINUS)) {
+            val op = previous()
+            val right = unary()
+            return Expr.Unary(op, right)
+        }
+        return call()
+    }
+    private fun call(): Expr {
+        // Handle explicit function call (IDENT + Parens)
+        // or just primary
+        if (check(TokenType.IDENTIFIER)) {
+            val saved = current
+            advance()
+            if (check(TokenType.LEFT_PAREN)) {
+                current = saved
+                return Expr.FunctionCallExpr(functionCall())
+            }
+            current = saved
+        }
+        return primary()
+    }
+    private fun primary(): Expr {
+        if (match(TokenType.NUMBER)) return Expr.Literal(previous().lexeme.toDouble())
+        if (match(TokenType.STRING)) return Expr.Literal(previous().literal)
+        if (match(TokenType.PERCENTAGE)) return Expr.Percentage(previous().lexeme.removeSuffix("%").toDouble())
+        if (match(TokenType.TIME)) return Expr.Time(previous().lexeme.removeSuffix("s").toInt())
+        if (match(TokenType.IDENTIFIER)) return Expr.Variable(previous())
+        if (match(TokenType.LEFT_PAREN)) {
+            val expr = expression()
+            consume(TokenType.RIGHT_PAREN, "Expect ')'.")
+            return Expr.Grouping(expr)
+        }
+        error(peek(), "Expect expression.")
+        return Expr.Literal(null)
+    }
+
+    // ---- Helpers ----
+    private fun statEntry(): StatEntry {
+        val name = consume(TokenType.IDENTIFIER, "Expect stat name.")
+        consume(TokenType.COLON, "Expect ':'.")
+        val value = expression()
+        return StatEntry(name, value)
+    }
+
+    private fun functionCall(): FunctionCall {
+        val name = consume(TokenType.IDENTIFIER, "Expect function name.")
+        consume(TokenType.LEFT_PAREN, "Expect '('.")
+        val args = mutableListOf<Argument>()
+        if (!check(TokenType.RIGHT_PAREN)) {
+            do {
+                if (check(TokenType.IDENTIFIER)) {
+                    val saved = current
+                    val id = advance()
+                    if (match(TokenType.COLON)) {
+                        args.add(Argument.NamedArg(id, expression()))
+                    } else {
+                        current = saved
+                        args.add(Argument.PositionalArg(expression()))
+                    }
+                } else {
+                    args.add(Argument.PositionalArg(expression()))
+                }
+            } while (match(TokenType.COMMA))
+        }
+        consume(TokenType.RIGHT_PAREN, "Expect ')'.")
+        return FunctionCall(name, args)
+    }
+
     private fun targetExpr(): TargetExpr {
         return when {
             match(TokenType.SELF) -> TargetExpr.Self
             match(TokenType.TARGET) -> TargetExpr.Target
             match(TokenType.CASTER) -> TargetExpr.Caster
             match(TokenType.IDENTIFIER) -> TargetExpr.Named(previous())
-            else -> {
-                error(peek(), "Expect target expression.")
-                TargetExpr.Self
-            }
+            else -> { error(peek(), "Expect target."); TargetExpr.Self }
         }
     }
 
-    // ---- Items Block ----
-    private fun parseItemsBlock(items: MutableList<Decl.ItemDecl>) {
-        consume(TokenType.LEFT_BRACE, "Expect '{' after 'Items'.")
-
-        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            if (match(TokenType.ITEM)) {
-                items.add(itemDecl())
-            } else {
-                error(peek(), "Expect 'item' in Items block.")
-                advance()
-            }
-        }
-
-        consume(TokenType.RIGHT_BRACE, "Expect '}' after Items block.")
-    }
-
-    private fun itemDecl(): Decl.ItemDecl {
-        val name = consume(TokenType.IDENTIFIER, "Expect item name.")
-        consume(TokenType.LEFT_BRACE, "Expect '{' after item name.")
-
-        val fields = mutableListOf<ItemField>()
-        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            fields.add(itemField())
-        }
-
-        consume(TokenType.RIGHT_BRACE, "Expect '}' after item body.")
-        return Decl.ItemDecl(name, fields)
-    }
-
-    private fun itemField(): ItemField {
-        return when {
-            match(TokenType.EFFECT) -> {
-                consume(TokenType.COLON, "Expect ':' after 'effect'.")
-                consume(TokenType.PIPE_GREATER, "Expect '|>' to start pipeline.")
-                val calls = mutableListOf<FunctionCall>()
-                calls.add(functionCall())
-                while (match(TokenType.PIPE_GREATER)) {
-                    calls.add(functionCall())
-                }
-                ItemField.EffectField(PipelineExpr(calls))
-            }
-            check(TokenType.IDENTIFIER) -> {
-                val name = advance()
-                consume(TokenType.COLON, "Expect ':' after property name.")
-                val value = expression()
-                ItemField.PropertyField(name, value)
-            }
-            else -> {
-                error(peek(), "Unexpected token in item body.")
-                advance()
-                ItemField.PropertyField(
-                    Token(TokenType.IDENTIFIER, "error", null, peek().line),
-                    Expr.Literal(null)
-                )
-            }
-        }
-    }
-
-    // ---- Creeps Block ----
-    private fun parseCreepsBlock(creeps: MutableList<Decl.CreepDecl>) {
-        consume(TokenType.LEFT_BRACE, "Expect '{' after 'Creeps'.")
-
-        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            if (match(TokenType.CREEP)) {
-                creeps.add(creepDecl())
-            } else {
-                error(peek(), "Expect 'creep' in Creeps block.")
-                advance()
-            }
-        }
-
-        consume(TokenType.RIGHT_BRACE, "Expect '}' after Creeps block.")
-    }
-
-    private fun creepDecl(): Decl.CreepDecl {
-        val name = consume(TokenType.IDENTIFIER, "Expect creep name.")
-        consume(TokenType.LEFT_BRACE, "Expect '{' after creep name.")
-
-        val stats = mutableListOf<StatEntry>()
-        while (!check(TokenType.RIGHT_BRACE) && !isAtEnd()) {
-            stats.add(statEntry())
-        }
-
-        consume(TokenType.RIGHT_BRACE, "Expect '}' after creep stats.")
-        return Decl.CreepDecl(name, stats)
-    }
-
-    // ---- Expression Parsing (for :evaluate command) ----
-    fun parseExpression(): Expr {
-        val expr = expression()
-        if (!isAtEnd()) {
-            error(peek(), "Unexpected tokens after expression.")
-        }
-        return expr
-    }
-
-    // ---- Expressions ----
-    private fun expression(): Expr = equality()
-
-    private fun equality(): Expr {
-        var expr = comparison()
-        while (match(TokenType.EQUAL_EQUAL, TokenType.BANG_EQUAL)) {
-            val operator = previous()
-            val right = comparison()
-            expr = Expr.Binary(expr, operator, right)
-        }
-        return expr
-    }
-
-    private fun comparison(): Expr {
-        var expr = term()
-        while (match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
-            val operator = previous()
-            val right = term()
-            expr = Expr.Binary(expr, operator, right)
-        }
-        return expr
-    }
-
-    private fun term(): Expr {
-        var expr = factor()
-        while (match(TokenType.PLUS, TokenType.MINUS)) {
-            val operator = previous()
-            val right = factor()
-            expr = Expr.Binary(expr, operator, right)
-        }
-        return expr
-    }
-
-    private fun factor(): Expr {
-        var expr = primary()
-        while (match(TokenType.STAR, TokenType.DIVIDE)) {
-            val operator = previous()
-            val right = primary()
-            expr = Expr.Binary(expr, operator, right)
-        }
-        return expr
-    }
-
-    private fun primary(): Expr {
-        if (match(TokenType.NUMBER)) return Expr.Literal(previous().lexeme.toDouble())
-        if (match(TokenType.STRING)) return Expr.Literal(previous().literal)
-        if (match(TokenType.PERCENTAGE)) {
-            val value = previous().lexeme.removeSuffix("%").toDouble()
-            return Expr.Percentage(value)
-        }
-        if (match(TokenType.TIME)) {
-            val value = previous().lexeme.removeSuffix("s").toInt()
-            return Expr.Time(value)
-        }
-        if (match(TokenType.IDENTIFIER)) {
-            val name = previous()
-            // Check if it's a function call
-            if (match(TokenType.LEFT_PAREN)) {
-                current-- // backtrack
-                return Expr.FunctionCallExpr(functionCall())
-            }
-            return Expr.Variable(name)
-        }
-        if (match(TokenType.LEFT_PAREN)) {
-            val expr = expression()
-            consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
-            return Expr.Grouping(expr)
-        }
-
-        error(peek(), "Expect expression.")
-        return Expr.Literal(null)
-    }
-
-    // ---- Helpers ----
     private fun match(vararg types: TokenType): Boolean {
-        for (type in types) {
-            if (check(type)) {
-                advance()
-                return true
-            }
-        }
+        for (t in types) if (check(t)) { advance(); return true }
         return false
     }
-
-    private fun consume(type: TokenType, message: String): Token {
+    private fun check(type: TokenType) = !isAtEnd() && peek().type == type
+    private fun advance(): Token { if (!isAtEnd()) current++; return previous() }
+    private fun isAtEnd() = peek().type == TokenType.EOF
+    private fun peek() = tokens[current]
+    private fun previous() = tokens[current - 1]
+    private fun consume(type: TokenType, msg: String): Token {
         if (check(type)) return advance()
-        error(peek(), message)
+        error(peek(), msg)
         return Token(type, "", null, peek().line)
     }
-
-    private fun check(type: TokenType): Boolean {
-        if (isAtEnd()) return false
-        return peek().type == type
-    }
-
-    private fun advance(): Token {
-        if (!isAtEnd()) current++
-        return previous()
-    }
-
-    private fun isAtEnd(): Boolean = peek().type == TokenType.EOF
-    private fun peek(): Token = tokens[current]
-    private fun previous(): Token = tokens[current - 1]
-
-    private fun error(token: Token, message: String) {
-        System.err.println("[line ${token.line}] Error at '${token.lexeme}': $message")
+    private fun error(token: Token, msg: String) {
+        System.err.println("[line ${token.line}] Error at '${token.lexeme}': $msg")
     }
 }
