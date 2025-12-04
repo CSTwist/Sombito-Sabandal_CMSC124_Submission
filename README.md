@@ -359,7 +359,8 @@ section        ::= heroes_section
                  | arena_section
                  | status_effects_section
                  | items_section
-                 | creeps_section ;
+                 | creeps_section
+                 | functions_section ; 
 
 
 heroes_section ::= "Heroes" "{" { hero_def } "}" ;
@@ -490,6 +491,14 @@ for_stmt       ::= "for" "(" IDENT "in" expression ")" script_block ;
 expression_stmt::= expression ";" ;
 
 return_stmt    ::= "return" [ expression ] ";" ;
+
+functions_section ::= "Functions" "{" { function_def } "}" ;
+
+function_def      ::= "function" IDENT "(" [ param_list ] ")" [ ":" type_expr ] script_block ;
+
+param_list        ::= param { "," param } ;
+
+param             ::= type_expr IDENT ;
 
 ```
 
