@@ -3,7 +3,32 @@ import kotlin.math.floor
 
 class Evaluator {
 
-    private var environment = Environment()
+    // 1. Buffer to store the logs instead of printing immediately
+    private val logBuffer = StringBuilder()
+
+    // Helper to append to buffer
+    private fun log(message: String) {
+        logBuffer.appendLine(message)
+    }
+
+    private var environment = Environment().apply {
+        // 2. Register the built-in 'printLog' function
+        val printLogToken = Token(TokenType.IDENTIFIER, "printLog", null, 0)
+        define(printLogToken, PrintLog(logBuffer))
+    }
+
+    // ============================================================
+    // Native Function Implementation
+    // ============================================================
+    class PrintLog(private val buffer: StringBuilder) : NativeFunction {
+        override fun name() = "printLog"
+        override fun arity() = 0
+        override fun call(context: ExecutionContext, args: List<Any?>): Any? {
+            // This flushes the buffer to the real STDOUT when the user calls printLog()
+            print(buffer.toString())
+            return null
+        }
+    }
 
     // ============================================================
     // Evaluate a single expression (for :evaluate command)
@@ -18,13 +43,15 @@ class Evaluator {
     fun evaluateProgram(program: Program) {
         // Imports
         for (importDecl in program.imports) {
-            // Processing imports (no-op for now)
+            log("Imported: ${importDecl.name.lexeme}")
         }
 
         // Global variables
+        log("\n=== Global Variables ===")
         for (varDecl in program.variables) {
             val value = evalExpr(varDecl.value, environment)
             environment.define(varDecl.name, value)
+            log("Set ${varDecl.name.lexeme} = ${stringify(value)}")
         }
 
         // Heroes
@@ -51,15 +78,13 @@ class Evaluator {
         for (creep in program.creeps) {
             evaluateCreep(creep)
         }
-
-        // Functions (if present in Program AST, though not explicitly in previous definition)
-        // If Program.kt has been updated to include 'functions', iteration would go here.
     }
 
     // ============================================================
     //                        HEROES
     // ============================================================
     private fun evaluateHero(hero: Decl.HeroDecl) {
+        log("\n=== Hero: ${hero.name.lexeme} ===")
         val heroEnv = Environment(environment)
 
         for (statement: HeroStatement in hero.statements) {
@@ -67,45 +92,53 @@ class Evaluator {
                 is HeroStatement.SetStmt -> {
                     val value = evalExpr(statement.value, heroEnv)
                     heroEnv.define(statement.name, value)
+                    log("  Set ${statement.name.lexeme} = ${stringify(value)}")
                 }
                 is HeroStatement.HeroStatBlock -> {
+                    log("  Hero Stats:")
                     for (stat in statement.stats) {
                         val value = evalExpr(stat.value, heroEnv)
                         heroEnv.define(stat.name, value)
+                        log("    ${stat.name.lexeme}: ${stringify(value)}")
                     }
                 }
+                is HeroStatement.ScalingCall -> {
+                    log("  Scaling: ${statement.param1.lexeme} scales with ${statement.param2.lexeme}")
+                }
                 is HeroStatement.AbilitiesBlock -> {
+                    log("  Abilities:")
                     for (ability in statement.abilities) {
                         evaluateAbility(ability, heroEnv)
                     }
-                }
-                else -> {
-                    // Handle potential new HeroStatement types
                 }
             }
         }
     }
 
     private fun evaluateAbility(ability: AbilityDecl, env: Environment) {
+        log("    - ${ability.name.lexeme}")
         for (field: AbilityField in ability.fields) {
             when (field) {
-                is AbilityField.TypeField -> {}
-                is AbilityField.CooldownField -> { evalExpr(field.value, env) }
-                is AbilityField.ManaCostField -> { evalExpr(field.value, env) }
-                is AbilityField.RangeField -> { evalExpr(field.value, env) }
-                is AbilityField.DamageTypeField -> {}
+                is AbilityField.TypeField ->
+                    log("      Type: ${field.value.lexeme}")
+
+                is AbilityField.CooldownField ->
+                    log("      Cooldown: ${stringify(evalExpr(field.value, env))}")
+
+                is AbilityField.ManaCostField ->
+                    log("      Mana Cost: ${stringify(evalExpr(field.value, env))}")
+
+                is AbilityField.RangeField ->
+                    log("      Range: ${stringify(evalExpr(field.value, env))}")
+
+                is AbilityField.DamageTypeField ->
+                    log("      Damage Type: ${field.value.lexeme}")
+
                 is AbilityField.BehaviorField -> {
-                    // Pre-calculate behavior environment if needed, or execute immediately for testing
+                    log("      Behavior block:")
+                    // Execute behavior in a fresh child environment of this hero/ability
                     val behaviorEnv = Environment(env)
-                    // Check if body is nullable (based on grammar it might be pipeline_expr OR block)
-                    // Assuming field.body is the BlockStmt? property
-                    val body: BlockStmt? = field.body
-                    if (body != null) {
-                        executeBlock(body, behaviorEnv)
-                    }
-                }
-                else -> {
-                    // Handle potential new AbilityField types
+                    executeBlock(field.body, behaviorEnv, indent = "        ")
                 }
             }
         }
@@ -117,25 +150,33 @@ class Evaluator {
     private fun evaluateArenaItem(item: Decl) {
         when (item) {
             is Decl.TeamDecl -> {
+                log("\n=== Team: ${item.name.lexeme} ===")
                 environment.define(item.name, "Team")
             }
             is Decl.TurretDecl -> {
+                log("\n=== Turret: ${item.name.lexeme} ===")
                 for (stat in item.stats) {
-                    evalExpr(stat.value, environment)
+                    val value = evalExpr(stat.value, environment)
+                    log("  ${stat.name.lexeme}: ${stringify(value)}")
                 }
             }
             is Decl.CoreDecl -> {
+                log("\n=== Core: ${item.name.lexeme} ===")
                 for (stat in item.stats) {
-                    evalExpr(stat.value, environment)
+                    val value = evalExpr(stat.value, environment)
+                    log("  ${stat.name.lexeme}: ${stringify(value)}")
                 }
             }
             is Decl.ConstDecl -> {
+                log("\n=== Const: ${item.name.lexeme} ===")
                 val value = evalExpr(item.value, environment)
                 environment.define(item.name, value)
+                log("  Value: ${stringify(value)}")
             }
             is Decl.VarDecl -> {
                 val value = evalExpr(item.value, environment)
                 environment.define(item.name, value)
+                log("  Set ${item.name.lexeme} = ${stringify(value)}")
             }
             is Decl.HeroDecl -> {
                 evaluateHero(item)
@@ -149,12 +190,11 @@ class Evaluator {
             is Decl.StatusEffectDecl -> {
                 evaluateStatusEffect(item)
             }
-            is Decl.ImportDecl -> {}
-            is Decl.FunctionDecl -> {
-                // Function definitions
+            is Decl.ImportDecl -> {
+                log("  Imported: ${item.name.lexeme}")
             }
-            else -> {
-                // Handle potential new Decl types
+            is Decl.FunctionDecl -> {
+                log("\n=== Function Decl: ${item.name.lexeme} (...) ===")
             }
         }
     }
@@ -163,24 +203,25 @@ class Evaluator {
     //                    STATUS EFFECTS
     // ============================================================
     private fun evaluateStatusEffect(effect: Decl.StatusEffectDecl) {
+        log("\n=== Status Effect: ${effect.name.lexeme} ===")
         for (field: StatusEffectField in effect.fields) {
             when (field) {
-                is StatusEffectField.TypeField -> {}
-                is StatusEffectField.DurationField -> { evalExpr(field.value, environment) }
+                is StatusEffectField.TypeField ->
+                    log("  Type: ${field.value.lexeme}")
+
+                is StatusEffectField.DurationField ->
+                    log("  Duration: ${stringify(evalExpr(field.value, environment))}")
+
                 is StatusEffectField.OnApplyField -> {
+                    log("  On Apply:")
                     val applyEnv = Environment(environment)
-                    executeBlock(field.block, applyEnv)
+                    executeBlock(field.block, applyEnv, indent = "    ")
                 }
+
                 is StatusEffectField.OnTickField -> {
+                    log("  On Tick:")
                     val tickEnv = Environment(environment)
-                    executeBlock(field.block, tickEnv)
-                }
-                is StatusEffectField.OnExpireField -> {
-                    val expireEnv = Environment(environment)
-                    executeBlock(field.block, expireEnv)
-                }
-                else -> {
-                    // Handles other potential fields
+                    executeBlock(field.block, tickEnv, indent = "    ")
                 }
             }
         }
@@ -190,24 +231,17 @@ class Evaluator {
     //                           ITEMS
     // ============================================================
     private fun evaluateItem(item: Decl.ItemDecl) {
+        log("\n=== Item: ${item.name.lexeme} ===")
         for (field: ItemField in item.fields) {
             when (field) {
                 is ItemField.PropertyField -> {
-                    evalExpr(field.value, environment)
+                    val value = evalExpr(field.value, environment)
+                    log("  ${field.name.lexeme}: ${stringify(value)}")
                 }
                 is ItemField.EffectField -> {
+                    log("  Effect block:")
                     val effectEnv = Environment(environment)
-                    val body: BlockStmt? = field.body
-                    if (body != null) {
-                        executeBlock(body, effectEnv)
-                    }
-                }
-                is ItemField.PassiveField -> {
-                    // Grammar: "passive" ":" "{" "behavior" ":" pipeline_expr "}"
-                    // Evaluating the behavior expression
-                    evalExpr(field.behavior, environment)
-                }
-                else -> {
+                    executeBlock(field.body, effectEnv, indent = "    ")
                 }
             }
         }
@@ -217,25 +251,28 @@ class Evaluator {
     //                           CREEPS
     // ============================================================
     private fun evaluateCreep(creep: Decl.CreepDecl) {
+        log("\n=== Creep: ${creep.name.lexeme} ===")
         for (stat in creep.stats) {
-            evalExpr(stat.value, environment)
+            val value = evalExpr(stat.value, environment)
+            log("  ${stat.name.lexeme}: ${stringify(value)}")
         }
     }
 
     // ============================================================
     //                       STATEMENTS
     // ============================================================
-    private fun executeBlock(block: BlockStmt, env: Environment) {
+    private fun executeBlock(block: BlockStmt, env: Environment, indent: String = "") {
         for (stmt in block.statements) {
-            execute(stmt, env)
+            execute(stmt, env, indent)
         }
     }
 
-    private fun execute(stmt: Stmt, env: Environment) {
+    private fun execute(stmt: Stmt, env: Environment, indent: String = "") {
         when (stmt) {
             is Stmt.ApplyStmt -> {
-                functionCallToString(stmt.call, env)
-                targetToString(stmt.target)
+                val callStr = functionCallToString(stmt.call, env)
+                val targetStr = targetToString(stmt.target)
+                log("${indent}Apply $callStr to $targetStr")
             }
 
             is Stmt.SetStmt -> {
@@ -245,100 +282,68 @@ class Evaluator {
                 } else {
                     env.define(stmt.name, value)
                 }
+                log("${indent}Set ${stmt.name.lexeme} = ${stringify(value)}")
             }
 
             is Stmt.StatEntryStmt -> {
                 val value = evalExpr(stmt.entry.value, env)
                 env.define(stmt.entry.name, value)
+                log("${indent}Stat ${stmt.entry.name.lexeme} = ${stringify(value)}")
             }
 
             is Stmt.FunctionCallStmt -> {
-                if (stmt.call.name.lexeme == "printLog") {
-                    printLog(env)
-                } else {
-                    evalExpr(Expr.FunctionCallExpr(stmt.call), env)
+                // Execute the function call expression
+                val result = evalExpr(Expr.FunctionCallExpr(stmt.call), env)
+                // If it wasn't a native function call that returned null/void, we log it
+                // (Note: printLog returns null, so we won't print "Call printLog -> nil")
+                if (stmt.call.name.lexeme != "printLog") {
+                    log("${indent}Call ${stmt.call.name.lexeme}(...) -> $result")
                 }
             }
 
             is Stmt.ExprStmt -> {
-                evalExpr(stmt.expr, env)
+                val result = evalExpr(stmt.expr, env)
+                log("${indent}Expr ${exprToString(stmt.expr, env)} -> ${stringify(result)}")
             }
 
             is Stmt.IfStmt -> {
                 val cond = evalExpr(stmt.condition, env)
                 if (isTruthy(cond)) {
                     val child = Environment(env)
-                    executeBlock(stmt.thenBranch, child)
+                    log("${indent}If ${exprToString(stmt.condition, env)} then:")
+                    executeBlock(stmt.thenBranch, child, indent + "  ")
                 } else if (stmt.elseBranch != null) {
                     val child = Environment(env)
-                    val elseBlock = stmt.elseBranch
-                    if (elseBlock != null) {
-                        executeBlock(elseBlock, child)
-                    } else if (stmt is Stmt.IfStmt && stmt.elseBranch == null) {
-                        // Handle potential else-if structure if represented differently
-                    }
+                    log("${indent}Else:")
+                    executeBlock(stmt.elseBranch, child, indent + "  ")
                 }
             }
 
             is Stmt.WhileStmt -> {
-                val condExpr = stmt.condition
-                while (true) {
-                    if (condExpr != null && !isTruthy(evalExpr(condExpr, env))) {
-                        break
-                    }
+                log("${indent}While loop:")
+                while (isTruthy(stmt.condition?.let { evalExpr(it, env) } ?: true)) {
                     val bodyEnv = Environment(env)
-                    executeBlock(stmt.body, bodyEnv)
-                    if (condExpr == null) break // Safety break if condition missing
+                    executeBlock(stmt.body, bodyEnv, indent + "  ")
                 }
             }
 
             is Stmt.ForStmt -> {
-                // Grammar: for (IDENT in expression)
-                // Assuming AST has properties: variable (Token) and iterable (Expr)
+                log("${indent}For loop:")
                 val loopEnv = Environment(env)
-
-                val iterableValue = evalExpr(stmt.iterable, env)
-
-                // Placeholder iteration logic
-                // Without a Collection/List type in the Evaluator, we cannot fully implement iteration.
-                // If iterableValue is a number N, we could loop N times.
-
-                if (iterableValue is Double) {
-                    val count = iterableValue.toInt()
-                    for (i in 0 until count) {
-                        loopEnv.define(stmt.variable, i)
-                        executeBlock(stmt.body, loopEnv)
-                    }
-                } else {
-                    // Just execute once for now or log warning
-                    // println("Warning: Iteration over non-number ${stringify(iterableValue)} not fully supported.")
-                    loopEnv.define(stmt.variable, iterableValue)
-                    executeBlock(stmt.body, loopEnv)
+                stmt.initializer?.let { execute(it, loopEnv, indent + "  ") }
+                while (stmt.condition?.let { isTruthy(evalExpr(it, loopEnv)) } ?: true) {
+                    executeBlock(stmt.body, loopEnv, indent + "  ")
+                    stmt.increment?.let { execute(it, loopEnv, indent + "  ") }
                 }
             }
 
             is Stmt.ReturnStmt -> {
-                stmt.value?.let { evalExpr(it, env) }
+                val value = stmt.value?.let { evalExpr(it, env) }
+                log("${indent}Return ${value?.let { stringify(it) } ?: "nil"}")
             }
 
             is Stmt.FunStmt -> {
-                // Function definition logic
-            }
-
-            is Stmt.ConstDeclStmt -> {
-                // Grammar: const type IDENT = expression ;
-                val value = evalExpr(stmt.value, env)
-                env.define(stmt.name, value)
-            }
-
-            is Stmt.AssignmentStmt -> {
-                // Grammar: IDENT = expression ; (Reassignment)
-                val value = evalExpr(stmt.value, env)
-                env.assign(stmt.name, value)
-            }
-
-            else -> {
-                // Handles other potential statements
+                log("${indent}Function '${stmt.name.lexeme}' declared")
             }
         }
     }
@@ -371,9 +376,23 @@ class Evaluator {
         is Expr.Time -> expr.seconds.toDouble()
 
         is Expr.FunctionCallExpr -> {
-            if (expr.call.name.lexeme == "printLog") {
-                printLog(env)
-                "Log Output"
+            // Check if it's a native function (like printLog)
+            if (env.isDefinedAnywhere(expr.call.name)) {
+                val value = env.get(expr.call.name)
+                if (value is NativeFunction) {
+                    // Evaluate arguments
+                    val args = expr.call.arguments.map { arg ->
+                        when (arg) {
+                            is Argument.PositionalArg -> evalExpr(arg.value, env)
+                            is Argument.NamedArg -> evalExpr(arg.value, env)
+                        }
+                    }
+                    // Execute Native Function
+                    value.call(ExecutionContext(World()), args)
+                } else {
+                    // Fallback for non-native functions or just string representation
+                    functionCallToString(expr.call, env)
+                }
             } else {
                 functionCallToString(expr.call, env)
             }
@@ -383,34 +402,6 @@ class Evaluator {
 
         is Expr.Unary -> evalUnary(expr, env)
     }
-
-    // ============================================================
-    //                     BUILT-IN FUNCTIONS
-    // ============================================================
-
-    private fun printLog(env: Environment) {
-        println("\n=== EXECUTION LOG ===")
-        var current: Environment? = env
-        var scopeLevel = 0
-
-        while (current != null) {
-            val vars = current.getLocalVariables()
-            if (vars.isNotEmpty()) {
-                val scopeName = if (scopeLevel == 0) "Current Scope" else "Enclosing Scope $scopeLevel"
-                println("--- $scopeName ---")
-                for ((k, v) in vars) {
-                    println("$k: ${stringify(v)}")
-                }
-            }
-            current = current.enclosing
-            scopeLevel++
-        }
-        println("=====================\n")
-    }
-
-    // ============================================================
-    //                        HELPERS
-    // ============================================================
 
     private fun evalLogical(expr: Expr.Logical, env: Environment): Any? {
         val left = evalExpr(expr.left, env)
@@ -500,17 +491,13 @@ class Evaluator {
             TokenType.EQUAL_EQUAL -> left == right
             TokenType.BANG_EQUAL -> left != right
 
-            // Pipeline Operator |>
-            TokenType.PIPE_GREATER -> {
-                // Grammar: function_call { "|>" function_call }
-                // Implementation: Just stringifying the pipeline operation for now
-                "${stringify(left)} |> ${stringify(right)}"
-            }
-
             else -> throw RuntimeException("Unsupported operator: ${operator.lexeme}")
         }
     }
 
+    // ============================================================
+    //                        HELPERS
+    // ============================================================
     private fun isTruthy(value: Any?): Boolean {
         if (value == null) return false
         if (value is Boolean) return value

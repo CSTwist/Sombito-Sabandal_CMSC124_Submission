@@ -28,8 +28,12 @@ sealed interface Decl {
         val stats: List<StatEntry>
     ) : Decl
 
-    /** const team IDENTIFIER */
-    data class TeamDecl(val name: Token) : Decl
+    /** team IDENTIFIER { [core ref] [turrets block] } */
+    data class TeamDecl(
+        val name: Token,
+        val coreRef: Token?,
+        val turrets: List<TurretDecl>
+    ) : Decl
 
     /** statusEffect IDENTIFIER { status_effect_body } */
     data class StatusEffectDecl(
@@ -49,14 +53,16 @@ sealed interface Decl {
         val stats: List<StatEntry>
     ) : Decl
 
-    /** Optional: full function declaration at top-level (not used yet) */
+    /** function IDENTIFIER (params) : type { body } */
     data class FunctionDecl(
         val name: Token,
-        val params: List<Token>,
+        val params: List<Param>,
+        val returnType: Token?, // e.g. Number, Boolean
         val body: BlockStmt
     ) : Decl
 }
 
+data class Param(val type: Token, val name: Token)
 
 // ========================= HERO STATEMENTS =========================
 
@@ -65,8 +71,6 @@ sealed interface HeroStatement {
     data class SetStmt(val name: Token, val value: Expr) : HeroStatement
 
     data class HeroStatBlock(val stats: List<StatEntry>) : HeroStatement
-
-    data class ScalingCall(val param1: Token, val param2: Token) : HeroStatement
 
     data class AbilitiesBlock(val abilities: List<AbilityDecl>) : HeroStatement
 }
@@ -92,14 +96,11 @@ sealed interface AbilityField {
     data class DamageTypeField(val value: Token) : AbilityField
 
     /**
-     * Behavior is a block of code:
-     * behavior: {
-     *     set x = 10
-     *     if (x > 5) { ... }
-     * }
+     * Behavior: Can be a block or a pipeline expression
      */
     data class BehaviorField(
-        val body: BlockStmt
+        val body: BlockStmt?, // If it's a script block
+        val expression: Expr? // If it's a pipeline expression
     ) : AbilityField
 }
 
@@ -115,6 +116,8 @@ sealed interface StatusEffectField {
     data class OnApplyField(val block: BlockStmt) : StatusEffectField
 
     data class OnTickField(val block: BlockStmt) : StatusEffectField
+
+    data class OnExpireField(val block: BlockStmt) : StatusEffectField
 }
 
 
@@ -125,12 +128,10 @@ sealed interface ItemField {
     data class PropertyField(val name: Token, val value: Expr) : ItemField
 
     /**
-     * Effect is a block:
-     * effect: {
-     *     apply DealDamage(10) to target
-     * }
+     * passive: { behavior: ... }
+     * Uses a pipeline expression
      */
-    data class EffectField(val body: BlockStmt) : ItemField
+    data class PassiveField(val behavior: Expr) : ItemField
 }
 
 
@@ -144,6 +145,8 @@ sealed interface Stmt {
 
     data class SetStmt(val name: Token, val value: Expr) : Stmt
 
+    data class ConstDeclStmt(val type: Token, val name: Token, val value: Expr) : Stmt
+
     data class FunctionCallStmt(val call: FunctionCall) : Stmt
 
     data class ExprStmt(val expr: Expr) : Stmt
@@ -153,12 +156,10 @@ sealed interface Stmt {
 
     data class WhileStmt(val condition: Expr, val body: BlockStmt) : Stmt
 
-    data class ForStmt(val initializer: Stmt?, val condition: Expr?, val increment: Stmt?, val body: BlockStmt) : Stmt
+    data class ForStmt(val variable: Token, val collection: Expr, val body: BlockStmt) : Stmt
 
     data class ReturnStmt(val keyword: Token, val value: Expr?) : Stmt
-
-    // User-defined function inside block
-    data class FunStmt(val name: Token, val params: List<Token>, val body: BlockStmt) : Stmt
+    data class FunStmt(val variable: Token) : Stmt
 }
 
 

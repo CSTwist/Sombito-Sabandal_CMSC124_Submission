@@ -9,39 +9,38 @@ enum class TokenType {
     EQUAL, EQUAL_EQUAL,
     BANG, BANG_EQUAL,
     LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
-    PIPE_GREATER,
+    PIPE_GREATER, // |>
     AND, OR,
 
     // Keywords - Top Level
     GAME, HEROES, ARENA, STATUS_EFFECTS, ITEMS, CREEPS, FUNCTIONS,
-    IMPORT, CONST,
+    IMPORT, CONST, SET,
 
     // Keywords - Hero
-    HERO, HERO_STAT, SCALING, ABILITIES, SET,
+    HERO, HERO_STAT, SCALING, ABILITIES,
 
     // Keywords - Ability
     ABILITY, TYPE, COOLDOWN, MANA_COST, RANGE, DAMAGE_TYPE, BEHAVIOR,
 
     // Keywords - Arena
-    TEAM, TURRET, CORE, TURRETS, // Added TURRETS for "turrets: { }"
+    TEAM, TURRET, TURRETS, CORE,
 
     // Keywords - Status Effect
     STATUS_EFFECT, DURATION, ON_APPLY, ON_TICK, ON_EXPIRE,
 
     // Keywords - Item
-    ITEM, PASSIVE, // Added PASSIVE
+    ITEM, EFFECT, PASSIVE,
 
     // Keywords - Creep
     CREEP,
 
     // Keywords - Behavior/Targets
-    APPLY, TO, SELF, TARGET, CASTER,
+    APPLY, TO, SELF, TARGET, CASTER, FUNCTION,
 
-    // Keywords - Control Flow & Functions
+    // Keywords - Control Flow
     IF, ELSE,
-    WHILE, FOR, IN, // Added IN for "for x in y"
+    WHILE, FOR, IN,
     RETURN,
-    FUNCTION, // Lowercase "function" for defs
 
     // Literals
     STRING, NUMBER, IDENTIFIER,
@@ -53,7 +52,6 @@ enum class TokenType {
 
 fun classifyLexeme(lexeme: String): TokenType {
     return when (lexeme) {
-        // Punctuation
         "," -> TokenType.COMMA
         ";" -> TokenType.SEMICOLON
         ":" -> TokenType.COLON
@@ -62,7 +60,6 @@ fun classifyLexeme(lexeme: String): TokenType {
         "{" -> TokenType.LEFT_BRACE
         "}" -> TokenType.RIGHT_BRACE
 
-        // Operators
         "+" -> TokenType.PLUS
         "-" -> TokenType.MINUS
         "*" -> TokenType.STAR
@@ -77,7 +74,6 @@ fun classifyLexeme(lexeme: String): TokenType {
         ">=" -> TokenType.GREATER_EQUAL
         "|>" -> TokenType.PIPE_GREATER
 
-        // Keywords - Top Level
         "GAME" -> TokenType.GAME
         "Heroes" -> TokenType.HEROES
         "Arena" -> TokenType.ARENA
@@ -87,15 +83,13 @@ fun classifyLexeme(lexeme: String): TokenType {
         "Functions" -> TokenType.FUNCTIONS
         "import" -> TokenType.IMPORT
         "const" -> TokenType.CONST
+        "set" -> TokenType.SET
 
-        // Keywords - Hero
         "hero" -> TokenType.HERO
         "heroStat" -> TokenType.HERO_STAT
         "scaling" -> TokenType.SCALING
         "abilities" -> TokenType.ABILITIES
-        "set" -> TokenType.SET
 
-        // Keywords - Ability
         "ability" -> TokenType.ABILITY
         "type" -> TokenType.TYPE
         "cooldown" -> TokenType.COOLDOWN
@@ -104,62 +98,46 @@ fun classifyLexeme(lexeme: String): TokenType {
         "damage_type" -> TokenType.DAMAGE_TYPE
         "behavior" -> TokenType.BEHAVIOR
 
-        // Keywords - Arena
         "team" -> TokenType.TEAM
         "turret" -> TokenType.TURRET
         "turrets" -> TokenType.TURRETS
         "core" -> TokenType.CORE
 
-        // Keywords - Status Effect
         "statusEffect" -> TokenType.STATUS_EFFECT
         "duration" -> TokenType.DURATION
         "on_apply" -> TokenType.ON_APPLY
         "on_tick" -> TokenType.ON_TICK
         "on_expire" -> TokenType.ON_EXPIRE
 
-        // Keywords - Item
         "item" -> TokenType.ITEM
+        "effect" -> TokenType.EFFECT
         "passive" -> TokenType.PASSIVE
 
-        // Keywords - Creep
         "creep" -> TokenType.CREEP
 
-        // Keywords - Behavior/Targets
         "apply" -> TokenType.APPLY
         "to" -> TokenType.TO
         "self" -> TokenType.SELF
         "target" -> TokenType.TARGET
         "caster" -> TokenType.CASTER
+        "function" -> TokenType.FUNCTION
 
-        // Keywords - Control Flow & Functions
         "if" -> TokenType.IF
         "else" -> TokenType.ELSE
         "while" -> TokenType.WHILE
         "for" -> TokenType.FOR
         "in" -> TokenType.IN
         "return" -> TokenType.RETURN
-        "function" -> TokenType.FUNCTION
 
-        // Logical keywords
         "and" -> TokenType.AND
         "or" -> TokenType.OR
 
         else -> when {
-            // Percentage (e.g., "50%")
             lexeme.matches(Regex("^[0-9]+%$")) -> TokenType.PERCENTAGE
-
-            // Time (e.g., "5s")
             lexeme.matches(Regex("^[0-9]+s$")) -> TokenType.TIME
-
-            // Numeric literals
             lexeme.matches(Regex("^[0-9]+(\\.[0-9]+)?$")) -> TokenType.NUMBER
-
-            // String literals (double-quoted)
             lexeme.matches(Regex("^\".*\"$")) -> TokenType.STRING
-
-            // Valid identifiers
             lexeme.matches(Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")) -> TokenType.IDENTIFIER
-
             else -> TokenType.INVALID
         }
     }

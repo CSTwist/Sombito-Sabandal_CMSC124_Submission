@@ -1,4 +1,3 @@
-// Environment.kt
 class Environment(val enclosing: Environment? = null) {
 
     private val values = mutableMapOf<String, Any?>()

@@ -8,9 +8,9 @@ sealed interface Expr {
     data class Percentage(val value: Double) : Expr
     data class Time(val seconds: Int) : Expr
 
-    // New for logical expressions: condition and/or condition
+    // Logical expressions: condition and condition, condition or condition
     data class Logical(val left: Expr, val operator: Token, val right: Expr) : Expr
 
-    // New for unary: !expr, -expr
+    // Unary expressions: !is_dead, -damage
     data class Unary(val operator: Token, val right: Expr) : Expr
 }

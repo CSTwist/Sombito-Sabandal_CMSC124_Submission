@@ -36,23 +36,6 @@ class Parser(private val tokens: List<Token>) {
                 match(TokenType.ITEMS) -> parseItemsBlock(items)
                 match(TokenType.CREEPS) -> parseCreepsBlock(creeps)
                 match(TokenType.FUNCTIONS) -> parseFunctionsBlock(functions)
-
-                // Allow "IDENT = EXPR;" at top level
-                check(TokenType.IDENTIFIER) -> {
-                    // Lookahead to ensure it's an assignment
-                    // We don't want to consume the token if it turns out to be invalid,
-                    // but at top level, a lone identifier is usually only valid if it's an assignment.
-                    val name = advance()
-                    if (match(TokenType.EQUAL)) {
-                        val value = expression()
-                        consume(TokenType.SEMICOLON, "Expect ';' after assignment.")
-                        // We store this as a VarDecl. The Evaluator treats VarDecl as "define or update".
-                        variables.add(Decl.VarDecl(name, value))
-                    } else {
-                        error(previous(), "Unexpected top-level identifier. Did you mean to assign a variable?")
-                    }
-                }
-
                 else -> {
                     error(peek(), "Unexpected token in game body: '${peek().lexeme}'")
                     advance()
