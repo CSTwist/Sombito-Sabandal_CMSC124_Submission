@@ -349,143 +349,178 @@ Designers can tweak balance values, add new effects, or create heroes without to
 ## Grammar
 
 ```
-game_file       ::= { import_stmt } "GAME" IDENT game_body ;
 
-import_stmt     ::= "import" IDENT ";" ;
+game_file       ::= { import_stmt } "GAME" IDENTIFIER game_body ;
+
+import_stmt     ::= "import" IDENTIFIER ";" ;
 
 game_body       ::= "{" { top_level_decl | section } "}" ;
 
-/* Update: Added assignment_stmt to top_level_decl */
-top_level_decl  ::= "set" IDENT "=" expression ";"
-| IDENT "=" expression ";" ;
+top_level_decl  ::= "set" IDENTIFIER "=" expression ";" ;
 
 section         ::= heroes_section
-| arena_section
-| status_effects_section
-| items_section
-| creeps_section
-| functions_section ;
+                 | arena_section
+                 | status_effects_section
+                 | items_section
+                 | creeps_section
+                 | functions_section ;
+
 
 /* --- Sections --- */
 
+Heroes:
+
 heroes_section  ::= "Heroes" "{" { hero_def } "}" ;
 
-hero_def        ::= "hero" IDENT "{" hero_body "}" ;
+hero_def        ::= "hero" IDENTIFIER "{" hero_body "}" ;
 
 hero_body       ::= { hero_statement } ;
 
-hero_statement  ::= "set" IDENT "=" expression ";"
-| "heroStat" ":" "{" { stat_entry } "}"
-| "abilities" ":" "{" { ability_def } "}" ;
+hero_statement  ::= "set" IDENTIFIER "=" expression ";"
+                 | "heroStat" ":" "{" { stat_entry } "}"
+                 | "abilities" ":" "{" { ability_def } "}" ;
 
-stat_entry      ::= IDENT ":" expression ;
+stat_entry      ::= IDENTIFIER ":" expression ;
 
-abilities_block ::= "abilities" ":" "{" { ability_def } "}" ;
 
-ability_def     ::= "ability" IDENT "{" ability_body "}" ;
+Abilities:
+
+ability_def     ::= "ability" IDENTIFIER "{" ability_body "}" ;
 
 ability_body    ::= { ability_field } ;
 
-ability_field   ::= "type" ":" IDENT
-| "cooldown" ":" expression
-| "mana_cost" ":" expression
-| "range" ":" expression
-| "damage_type" ":" IDENT
-| behavior_field ;
+ability_field   ::= "type" ":" IDENTIFIER
+                 | "cooldown" ":" expression
+                 | "mana_cost" ":" expression
+                 | "range" ":" expression     // (fixed) Added to match README examples
+                 | "damage_type" ":" IDENTIFIER
+                 | behavior_field ;
 
 behavior_field  ::= "behavior" ":" ( pipeline_expr | script_block ) ;
 
+
+
+
+Arena:
+
 arena_section   ::= "Arena" "{" { team_def | core_def | turret_def } "}" ;
 
-team_def        ::= "team" IDENT "{" team_body "}" ;
+team_def        ::= "team" IDENTIFIER "{" team_body "}" ;
 
-team_body       ::= [ core_ref ] [ turret_block ] ;
+team_body       ::= [ core_ref ] [ turret_block ] ;   // (fixed missing bracket)
 
-core_ref        ::= "core" IDENT ;
+core_ref        ::= "core" IDENTIFIER ;
 
 turret_block    ::= "turrets" ":" "{" { turret_def } "}" ;
 
-turret_def      ::= "turret" IDENT "{" stats_body "}" ;
+turret_def      ::= "turret" IDENTIFIER "{" stats_body "}" ;
 
-core_def        ::= "core" IDENT "{" stats_body "}" ;
+core_def        ::= "core" IDENTIFIER "{" stats_body "}" ;
 
 stats_body      ::= { stat_entry } ;
 
+
+
+Status Effects:
+
 status_effects_section
-::= "StatusEffects" "{" { status_effect_def } "}" ;
+                 ::= "StatusEffects" "{" { status_effect_def } "}" ;
 
 status_effect_def
-::= "statusEffect" IDENT "{" status_effect_body "}" ;
+                 ::= "statusEffect" IDENTIFIER "{" status_effect_body "}" ;
 
 status_effect_body
-::= { status_effect_field } ;
+                 ::= { status_effect_field } ;
 
 status_effect_field
-::= "type" ":" IDENT
-| "duration" ":" expression
-| "on_apply" ":" script_block
-| "on_tick" ":" script_block
-| "on_expire" ":" script_block ;
+                 ::= "type" ":" IDENTIFIER
+                 | "duration" ":" expression
+                 | "on_apply" ":" script_block
+                 | "on_tick" ":" script_block
+                 | "on_expire" ":" script_block ;
+
+
+
+Items:
 
 items_section   ::= "Items" "{" { item_def } "}" ;
 
-item_def        ::= "item" IDENT "{" item_body "}" ;
+item_def        ::= "item" IDENTIFIER "{" item_body "}" ;
 
 item_body       ::= { item_field | passive_block } ;
 
-item_field      ::= IDENT ":" expression ;
+item_field      ::= IDENTIFIER ":" expression ;
 
 passive_block   ::= "passive" ":" "{" "behavior" ":" pipeline_expr "}" ;
 
+
+
+Creeps:
+
 creeps_section  ::= "Creeps" "{" { creep_def } "}" ;
 
-creep_def       ::= "creep" IDENT "{" stats_body "}" ;
+creep_def       ::= "creep" IDENTIFIER "{" stats_body "}" ;
+
+
+
+
+Functions:
 
 functions_section
-::= "Functions" "{" { function_def } "}" ;
+                 ::= "Functions" "{" { function_def } "}" ;
 
-function_def    ::= "function" IDENT "(" [ param_list ] ")" [ ":" type_expr ] script_block ;
+function_def    ::= "function" IDENTIFIER "(" [ param_list ] ")"
+                    [ ":" type_expr ]
+                    script_block ;
 
 param_list      ::= param { "," param } ;
 
-param           ::= type_expr IDENT ;
+param           ::= type_expr IDENTIFIER ;
+
 
 /* --- Logic & Statements --- */
 
 script_block    ::= "{" { statement } "}" ;
 
 statement       ::= if_stmt
-| loop_stmt
-| return_stmt
-| const_decl
-| set_stmt        (* Variable Declaration or Assignment )
-| assignment_stmt ( Reassignment without 'set' )
-| apply_stmt
-| stat_entry_stmt ( context specific *)
-| expression_stmt ;
+                 | loop_stmt
+                 | return_stmt
+                 | const_decl
+                 | set_stmt
+                 | assignment_stmt
+                 | apply_stmt
+                 | stat_entry_stmt
+                 | expression_stmt ;
 
-if_stmt         ::= "if" "(" expression ")" script_block [ "else" ( script_block | if_stmt ) ] ;
 
-loop_stmt       ::= while_stmt
-| for_stmt ;
+Conditional and loops:
+
+if_stmt         ::= "if" "(" expression ")" script_block
+                    [ "else" ( script_block | if_stmt ) ] ;
+
+loop_stmt       ::= while_stmt | for_stmt ;
 
 while_stmt      ::= "while" "(" expression ")" script_block ;
 
-for_stmt        ::= "for" "(" IDENT "in" expression ")" script_block ;
+for_stmt        ::= "for" "(" IDENTIFIER "in" expression ")" script_block ;
+
+
+Statements:
 
 return_stmt     ::= "return" [ expression ] ";" ;
 
-const_decl      ::= "const" type_expr IDENT "=" expression ";" ;
+const_decl      ::= "const" type_expr IDENTIFIER "=" expression ";" ;
 
-set_stmt        ::= "set" IDENT "=" expression ";" ;
+set_stmt        ::= "set" IDENTIFIER "=" expression ";" ;
 
-assignment_stmt ::= IDENT "=" expression ";" ;
+assignment_stmt ::= IDENTIFIER "=" expression ";" ;
 
 apply_stmt      ::= "apply" function_call "to" target_expr ";" ;
 
-stat_entry_stmt ::= IDENT ":" expression ;
+stat_entry_stmt ::= IDENTIFIER ":" expression ;
 
 expression_stmt ::= expression ";" ;
+
 
 /* --- Expressions --- */
 
@@ -497,24 +532,32 @@ equality        ::= comparison { ( "==" | "!=" ) comparison } ;
 comparison      ::= term { ( ">" | ">=" | "<" | "<=" ) term } ;
 term            ::= factor { ( "+" | "-" ) factor } ;
 factor          ::= unary { ( "*" | "/" ) unary } ;
-unary           ::= ( "!" | "-" ) unary | call ;
 
+unary           ::= ( "!" | "-" ) unary | call ;
 call            ::= primary [ "(" [ argument_list ] ")" ] ;
 
-primary         ::= NUMBER | STRING | IDENTIFIER | PERCENTAGE | TIME
-| "(" expression ")" ;
+primary         ::= NUMBER
+                 | STRING
+                 | IDENTIFIER
+                 | PERCENTAGE
+                 | TIME
+                 | "(" expression ")" ;
 
 pipeline_expr   ::= function_call { "|>" function_call } ;
 
-function_call   ::= IDENT "(" [ argument_list ] ")" ;
+Function Call:
+
+
+function_call   ::= IDENTIFIER "(" [ argument_list ] ")" ;
 
 argument_list   ::= argument { "," argument } ;
 
-argument        ::= [ IDENT ":" ] expression ;
+argument        ::= [ IDENTIFIER ":" ] expression ;
 
-target_expr     ::= "self" | "target" | "caster" | IDENT ;
+target_expr     ::= "self" | "target" | "caster" | IDENTIFIER ;
 
-type_expr       ::= IDENT ; (* e.g. Number, Boolean, Entity, etc *)
+type_expr      ::= IDENTIFIER;   // Number, Boolean, Entity, etc.
+
 ```
 
 
