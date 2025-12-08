@@ -1,33 +1,71 @@
-import java.io.File
+// Main.kt
+//
+// Entry point for the DSL interpreter.
+// Reads the source file, tokenizes, parses, evaluates, and prints results.
 
 fun main(args: Array<String>) {
-    val scriptPath = if (args.isNotEmpty()) args[0] else "Text.txt"
 
-    // Read the content of the script file
-    val script = File(scriptPath).readLines()
-
-    // Check if the file exists and if not, print an error and exit
-    if (!File(scriptPath).exists()) {
-        println("Error: The file $scriptPath does not exist.")
+    // -----------------------------------------
+    // 0. CHECK INPUT ARGUMENTS
+    // -----------------------------------------
+    if (args.isEmpty()) {
+        println("Usage: dsl <source.dsl>")
         return
     }
 
-    // Tokenize the script lines
-    val tokens = Tokenizer.tokenizeToTokens(script)
+    val path = args[0]
 
-    // Parse the tokens into an Abstract Syntax Tree (AST)
-    try {
-        val parser = Parser(tokens)
-        val program = parser.parseProgram()
-
-
-        val evaluator = Evaluator()
-        evaluator.evaluateProgram(program)
-
-    } catch (ex: Exception) {
-        println("[Error] Failed to parse or evaluate the script: ${ex.message}")
-        ex.printStackTrace()
+    // -----------------------------------------
+    // 1. READ SOURCE FILE
+    // -----------------------------------------
+    val lines: List<String> = try {
+        java.io.File(path).readLines()
+    } catch (e: Exception) {
+        println("Error reading file '$path': ${e.message}")
+        return
     }
 
-    println("Program execution completed.")
+    // -----------------------------------------
+    // 2. TOKENIZE
+    // -----------------------------------------
+    val tokens = try {
+        Tokenizer.tokenizeToTokens(lines)
+    } catch (e: Exception) {
+        println("Tokenizer error: ${e.message}")
+        return
+    }
+
+    // Optional token debug:
+    // tokens.forEach { println(it) }
+
+    // -----------------------------------------
+    // 3. PARSE → AST
+    // -----------------------------------------
+    val parser = Parser(tokens)
+    val program: Program = try {
+        parser.parseProgram()
+    } catch (e: Exception) {
+        println("Parser error: ${e.message}")
+        return
+    }
+
+    // -----------------------------------------
+    // 4. OPTIONAL AST PRINT
+    // -----------------------------------------
+    println("=== AST OUTPUT ===")
+    AstPrinter().print(program)
+    println("=== END AST ===\n")
+
+    // -----------------------------------------
+    // 5. EVALUATE PROGRAM
+    // -----------------------------------------
+    val evaluator = Evaluator()
+    try {
+        evaluator.evaluate(program)
+    } catch (e: Exception) {
+        println("Runtime error: ${e.message}")
+        return
+    }
+
+    println("\nProgram executed successfully.")
 }

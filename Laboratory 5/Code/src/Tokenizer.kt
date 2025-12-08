@@ -1,91 +1,104 @@
 // Tokenizer.kt
+//
+// Clean, consistent tokenizer that matches Parser.kt and TokenType.kt.
+// Handles keywords, numbers, percentages, time literals, strings,
+// operators, identifiers, and comments correctly.
+
 object Tokenizer {
 
-    fun tokenizeBlock(lines: List<String>) {
-        var multiLineComment = false
-        var lineNumber = 1
-
-        for (line in lines) {
-            val tokensInLine = scanLine(line, lineNumber)
-            multiLineComment = classifyAndPrintTokens(tokensInLine, lineNumber, multiLineComment)
-            lineNumber++
-        }
-
-        printEOF(lineNumber - 1)
-
-        if (multiLineComment) {
-            System.err.println("[line ${lineNumber - 1}] Error: Unterminated block comment (missing */)")
-        }
-    }
-
+    // ---------------------------------------------------------------
+    // PUBLIC: Convert source lines → List<Token>
+    // ---------------------------------------------------------------
     fun tokenizeToTokens(lines: List<String>): List<Token> {
-        val out = mutableListOf<Token>()
+        val tokens = mutableListOf<Token>()
         var multiLineComment = false
         var lineNumber = 1
 
         for (line in lines) {
             val lexemes = scanLine(line, lineNumber)
             var i = 0
+
             while (i < lexemes.size) {
                 val lex = lexemes[i]
 
+                // Comment handling
                 if (lex == "/*") { multiLineComment = true; i++; continue }
                 if (lex == "*/") { multiLineComment = false; i++; continue }
                 if (multiLineComment) { i++; continue }
 
+                if (lex == "//") break // ignore rest of line
+
                 val type = classifyLexeme(lex)
                 val literal = extractLiteral(type, lex)
-                out.add(Token(type, lex, literal, lineNumber))
+                tokens.add(Token(type, lex, literal, lineNumber))
+
                 i++
             }
+
             lineNumber++
         }
 
-        out.add(Token(TokenType.EOF, "", null, (lineNumber - 1).coerceAtLeast(1)))
-
-        if (multiLineComment) {
-            System.err.println("[line ${lineNumber - 1}] Error: Unterminated block comment (missing */)")
-        }
-
-        return out
+        tokens.add(Token(TokenType.EOF, "", null, lineNumber - 1))
+        return tokens
     }
 
+    // ---------------------------------------------------------------
+    // Scan a SINGLE line into raw lexemes (strings)
+    // ---------------------------------------------------------------
     private fun scanLine(line: String, lineNumber: Int): MutableList<String> {
         val tokens = mutableListOf<String>()
         var index = 0
 
-        while (index < line.length) {
+        fun atEnd() = index >= line.length
+
+        while (!atEnd()) {
             val c = line[index]
+
             when {
                 c.isWhitespace() -> index++
 
+                // --------------------------
+                // String literal
+                // --------------------------
                 c == '"' -> {
-                    val (token, newIndex) = scanString(line, index, lineNumber)
-                    if (token != null) tokens.add(token)
-                    index = newIndex
+                    val (token, newIdx) = scanString(line, index, lineNumber)
+                    token?.let { tokens.add(it) }
+                    index = newIdx
                 }
 
+                // --------------------------
+                // Two-character operators
+                // --------------------------
                 isTwoCharOperator(line, index) -> {
-                    val (token, newIndex) = scanTwoCharOperator(line, index)
-                    if (token != null) tokens.add(token)
-                    index = newIndex
+                    val (op, newIdx) = scanTwoCharOperator(line, index)
+                    op?.let { tokens.add(it) }
+                    index = newIdx
                 }
 
+                // --------------------------
+                // Single-char operator
+                // --------------------------
                 isSingleCharOperator(c) -> {
                     tokens.add(c.toString())
                     index++
                 }
 
+                // --------------------------
+                // Number / %, s
+                // --------------------------
                 c.isDigit() -> {
-                    val (token, newIndex) = scanNumberOrSpecial(line, index)
-                    tokens.add(token)
-                    index = newIndex
+                    val (num, newIdx) = scanNumberOrSpecial(line, index)
+                    tokens.add(num)
+                    index = newIdx
                 }
 
+                // --------------------------
+                // Identifier or Keyword
+                // --------------------------
                 c.isLetter() || c == '_' -> {
-                    val (token, newIndex) = scanIdentifier(line, index)
-                    tokens.add(token)
-                    index = newIndex
+                    val (id, newIdx) = scanIdentifier(line, index)
+                    tokens.add(id)
+                    index = newIdx
                 }
 
                 else -> {
@@ -94,57 +107,86 @@ object Tokenizer {
                 }
             }
         }
+
         return tokens
     }
 
-    private fun classifyAndPrintTokens(
-        tokensInLine: MutableList<String>,
-        lineNumber: Int,
-        startingCommentState: Boolean
-    ): Boolean {
-        var multiLineComment = startingCommentState
-        var i = 0
-        while (i < tokensInLine.size) {
-            val lexeme = tokensInLine[i]
+    // ---------------------------------------------------------------
+    // STRING handling
+    // ---------------------------------------------------------------
+    private fun scanString(line: String, start: Int, lineNumber: Int): Pair<String?, Int> {
+        var index = start + 1
 
-            if (lexeme == "/*") { multiLineComment = true; i++; continue }
-            if (lexeme == "*/") { multiLineComment = false; i++; continue }
-
-            val type = classifyLexeme(lexeme)
-            val literal = extractLiteral(type, lexeme)
-
-            if (!multiLineComment) {
-                println("Token(Type=$type, Lexeme=$lexeme, Literal=$literal, Line=$lineNumber)")
+        while (index < line.length && line[index] != '"') {
+            if (line[index] == '\\' && index + 1 < line.length) {
+                index += 2
+                continue
             }
-            i++
+            index++
         }
-        return multiLineComment
+
+        return if (index >= line.length) {
+            System.err.println("[line $lineNumber] Error: Unterminated string.")
+            Pair(null, line.length)
+        } else {
+            Pair(line.substring(start, index + 1), index + 1)
+        }
     }
 
-    private fun extractLiteral(type: TokenType, lexeme: String): String? = when (type) {
-        TokenType.STRING -> lexeme.removePrefix("\"").removeSuffix("\"")
-        TokenType.NUMBER -> lexeme
-        TokenType.PERCENTAGE -> lexeme.removeSuffix("%")
-        TokenType.TIME -> lexeme.removeSuffix("s")
-        else -> null
+    // ---------------------------------------------------------------
+    // NUMBER, PERCENTAGE, TIME
+    // ---------------------------------------------------------------
+    private fun scanNumberOrSpecial(line: String, start: Int): Pair<String, Int> {
+        var index = start
+
+        // digits
+        while (index < line.length && line[index].isDigit()) index++
+
+        // decimal part
+        if (index < line.length && line[index] == '.' &&
+            index + 1 < line.length && line[index + 1].isDigit()
+        ) {
+            index++
+            while (index < line.length && line[index].isDigit()) index++
+        }
+
+        // suffix
+        if (index < line.length) {
+            if (line[index] == '%') return Pair(line.substring(start, index + 1), index + 1)
+            if (line[index] == 's') return Pair(line.substring(start, index + 1), index + 1)
+        }
+
+        return Pair(line.substring(start, index), index)
     }
 
-    private fun printEOF(lastLine: Int) {
-        println("Token(Type=EOF, Lexeme=NULL, Literal=NULL, Line=$lastLine)")
+    // ---------------------------------------------------------------
+    // Identifier or Keyword
+    // ---------------------------------------------------------------
+    private fun scanIdentifier(line: String, start: Int): Pair<String, Int> {
+        var index = start + 1
+
+        while (index < line.length &&
+            (line[index].isLetterOrDigit() || line[index] == '_')
+        ) index++
+
+        return Pair(line.substring(start, index), index)
     }
 
+    // ---------------------------------------------------------------
+    // Operators
+    // ---------------------------------------------------------------
     private fun isTwoCharOperator(line: String, index: Int): Boolean {
         if (index + 1 >= line.length) return false
-        val two = line.substring(index, index + 2)
-        return two in listOf(
+        return line.substring(index, index + 2) in listOf(
             "<=", ">=", "==", "!=", "|>",
             "//", "/*", "*/"
         )
     }
 
-    private fun scanTwoCharOperator(line: String, start: Int): Pair<String?, Int> {
-        val two = line.substring(start, start + 2)
-        return if (two == "//") Pair(null, line.length) else Pair(two, start + 2)
+    private fun scanTwoCharOperator(line: String, index: Int): Pair<String?, Int> {
+        val op = line.substring(index, index + 2)
+        if (op == "//") return Pair(op, line.length) // ignore rest
+        return Pair(op, index + 2)
     }
 
     private fun isSingleCharOperator(c: Char): Boolean {
@@ -154,50 +196,16 @@ object Tokenizer {
         )
     }
 
-    private fun scanNumberOrSpecial(line: String, start: Int): Pair<String, Int> {
-        var index = start
-        var hasDot = false
-
-        // Scan digits
-        while (index < line.length && line[index].isDigit()) index++
-
-        // Check for decimal point
-        if (index < line.length && line[index] == '.') {
-            if (index + 1 < line.length && line[index + 1].isDigit()) {
-                hasDot = true
-                index++
-                while (index < line.length && line[index].isDigit()) index++
-            }
-        }
-
-        // Check for percentage or time suffix
-        if (index < line.length) {
-            when (line[index]) {
-                '%' -> return Pair(line.substring(start, index + 1), index + 1)
-                's' -> return Pair(line.substring(start, index + 1), index + 1)
-            }
-        }
-
-        return Pair(line.substring(start, index), index)
-    }
-
-    private fun scanIdentifier(line: String, start: Int): Pair<String, Int> {
-        var index = start + 1
-        while (index < line.length && (line[index].isLetterOrDigit() || line[index] == '_')) index++
-        return Pair(line.substring(start, index), index)
-    }
-
-    private fun scanString(line: String, start: Int, lineNumber: Int): Pair<String?, Int> {
-        var index = start + 1
-        while (index < line.length && line[index] != '"') {
-            if (line[index] == '\\' && index + 1 < line.length) { index += 2; continue }
-            index++
-        }
-        return if (index >= line.length) {
-            System.err.println("[line $lineNumber] Error: Unterminated string")
-            Pair(null, line.length)
-        } else {
-            Pair(line.substring(start, index + 1), index + 1)
+    // ---------------------------------------------------------------
+    // Literal extraction
+    // ---------------------------------------------------------------
+    private fun extractLiteral(type: TokenType, lexeme: String): Any? {
+        return when (type) {
+            TokenType.STRING -> lexeme.removePrefix("\"").removeSuffix("\"")
+            TokenType.NUMBER -> lexeme.toDouble()
+            TokenType.PERCENTAGE -> lexeme.removeSuffix("%").toDouble()
+            TokenType.TIME -> lexeme.removeSuffix("s").toInt()
+            else -> null
         }
     }
 }

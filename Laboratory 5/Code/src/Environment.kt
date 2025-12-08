@@ -1,54 +1,88 @@
-class Environment(val enclosing: Environment? = null) {
+// Environment.kt
+//
+// Simple lexical environment used by the Evaluator.
+// Stores variables, functions, hero objects, and all runtime values produced by the DSL.
+//
 
-    private val values = mutableMapOf<String, Any?>()
+class Environment(
+    private val enclosing: Environment? = null
+) {
 
-    fun define(name: Token, value: Any?) {
-        values[name.lexeme] = value
+    private val values: MutableMap<String, Any?> = mutableMapOf()
+
+    // ---------------------------------------------------------
+    // DEFINE — Introduces a new binding in the current scope
+    // ---------------------------------------------------------
+    fun define(name: String, value: Any?) {
+        values[name] = value
     }
 
-    fun get(name: Token): Any? {
-        val key = name.lexeme
-        if (values.containsKey(key)) {
-            return values[key]
-        }
-        if (enclosing != null) {
-            return enclosing.get(name)
-        }
-        throw RuntimeException("Undefined variable '${name.lexeme}' at line ${name.line}.")
-    }
+    // ---------------------------------------------------------
+    // ASSIGN — Rebinds an existing variable (searches upwards)
+    // ---------------------------------------------------------
+    fun assign(nameToken: Token, value: Any?) {
+        val name = nameToken.lexeme
 
-    fun assign(name: Token, value: Any?) {
-        val key = name.lexeme
-        if (values.containsKey(key)) {
-            values[key] = value
+        if (values.containsKey(name)) {
+            values[name] = value
             return
         }
+
         if (enclosing != null) {
-            enclosing.assign(name, value)
+            enclosing.assign(nameToken, value)
             return
         }
-        throw RuntimeException("Cannot assign to undefined variable '${name.lexeme}' at line ${name.line}.")
+
+        runtimeError(nameToken, "Undefined variable '$name'.")
     }
 
+    // ---------------------------------------------------------
+    // GET — Retrieves a value from this environment or parents
+    // ---------------------------------------------------------
+    fun get(nameToken: Token): Any? {
+        val name = nameToken.lexeme
 
-    fun isDefined(name: Token): Boolean {
-        return values.containsKey(name.lexeme)
+        if (values.containsKey(name)) return values[name]
+
+        if (enclosing != null) return enclosing.get(nameToken)
+
+        runtimeError(nameToken, "Undefined variable '$name'.")
+        return null
     }
 
-    fun isDefinedAnywhere(name: Token): Boolean {
-        if (values.containsKey(name.lexeme)) {
-            return true
+    // ---------------------------------------------------------
+    // CHILD — Creates a nested scope
+    // ---------------------------------------------------------
+    fun createChild(): Environment = Environment(this)
+
+    // ---------------------------------------------------------
+    // DEBUG / PRINT SUPPORT
+    // ---------------------------------------------------------
+    fun debugDump(title: String = "Environment") {
+        println("=== $title ===")
+        dumpRecursive(0)
+        println("===================")
+    }
+
+    private fun dumpRecursive(depth: Int) {
+        val indent = "  ".repeat(depth)
+        values.forEach { (k, v) ->
+            println("$indent$k = ${prettyValue(v)}")
         }
-        return enclosing?.isDefinedAnywhere(name) ?: false
+        enclosing?.dumpRecursive(depth + 1)
     }
 
+    private fun prettyValue(v: Any?): String =
+        when (v) {
+            null -> "nil"
+            is Map<*, *> -> v.entries.joinToString(prefix = "{", postfix = "}") { (k, value) ->
+                "$k=${prettyValue(value)}"
+            }
+            is List<*> -> v.joinToString(prefix = "[", postfix = "]") { prettyValue(it) }
+            else -> v.toString()
+        }
 
-    fun getLocalVariables(): Map<String, Any?> {
-        return values.toMap()
-    }
-
-
-    fun clear() {
-        values.clear()
+    private fun runtimeError(token: Token, msg: String): Nothing {
+        throw RuntimeException("[line ${token.line}] Error at '${token.lexeme}': $msg")
     }
 }

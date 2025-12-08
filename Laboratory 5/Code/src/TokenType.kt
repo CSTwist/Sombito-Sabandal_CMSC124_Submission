@@ -1,53 +1,107 @@
 // TokenType.kt
+// TokenType.kt
+//
+// Complete list of tokens used by the DSL, consistent with Parser, Evaluator, Tokenizer, and AST.
+//
+
 enum class TokenType {
-    // Punctuation
-    COMMA, SEMICOLON, COLON,
-    LEFT_PAREN, RIGHT_PAREN, LEFT_BRACE, RIGHT_BRACE,
 
-    // Operators
+    // ---------------------------------------------------------
+    // Single-character symbols
+    // ---------------------------------------------------------
+    LEFT_PAREN, RIGHT_PAREN,
+    LEFT_BRACE, RIGHT_BRACE,
+    COMMA, DOT, COLON, SEMICOLON,
     PLUS, MINUS, STAR, DIVIDE,
-    EQUAL, EQUAL_EQUAL,
-    BANG, BANG_EQUAL,
-    LESS, LESS_EQUAL, GREATER, GREATER_EQUAL,
-    PIPE_GREATER, // |>
-    AND, OR,
+    BANG, QUESTION,
+    EQUAL, GREATER, LESS,
 
-    // Keywords - Top Level
-    GAME, HEROES, ARENA, STATUS_EFFECTS, ITEMS, CREEPS, FUNCTIONS,
-    IMPORT, CONST, SET,
+    // ---------------------------------------------------------
+    // Multi-character operators
+    // ---------------------------------------------------------
+    EQUAL_EQUAL, BANG_EQUAL,
+    GREATER_EQUAL, LESS_EQUAL,
+    PIPE_GREATER,          // |>
 
-    // Keywords - Hero
-    HERO, HERO_STAT, SCALING, ABILITIES,
+    // ---------------------------------------------------------
+    // Literals
+    // ---------------------------------------------------------
+    IDENTIFIER,
+    STRING,                 // "text"
+    NUMBER,                 // 10, 20.5
+    PERCENTAGE,             // 50%
+    TIME,                   // 5s
 
-    // Keywords - Ability
-    ABILITY, TYPE, COOLDOWN, MANA_COST, RANGE, DAMAGE_TYPE, BEHAVIOR,
+    // ---------------------------------------------------------
+    // Keywords
+    // ---------------------------------------------------------
+    GAME,
+    IMPORT,
 
-    // Keywords - Arena
-    TEAM, TURRET, TURRETS, CORE,
+    // Variables
+    SET,
+    CONST,
 
-    // Keywords - Status Effect
-    STATUS_EFFECT, DURATION, ON_APPLY, ON_TICK, ON_EXPIRE,
-
-    // Keywords - Item
-    ITEM, EFFECT, PASSIVE,
-
-    // Keywords - Creep
-    CREEP,
-
-    // Keywords - Behavior/Targets
-    APPLY, TO, SELF, TARGET, CASTER, FUNCTION,
-
-    // Keywords - Control Flow
-    IF, ELSE,
-    WHILE, FOR, IN,
+    // Logic
+    AND,
+    OR,
+    IF,
+    ELSE,
+    WHILE,
+    FOR,
+    IN,
     RETURN,
 
-    // Literals
-    STRING, NUMBER, IDENTIFIER,
-    PERCENTAGE, TIME,
+    // Function-related
+    FUNCTION,
+    FUNCTIONS,
+    APPLY,
+    TO,
 
-    // Special
-    EOF, INVALID
+    // Hero system
+    HEROES,
+    HERO,
+    HERO_STAT,
+    ABILITIES,
+    ABILITY,
+
+    // Arena system
+    ARENA,
+    TEAM,
+    TURRET,
+    TURRETS,
+    CORE,
+
+    // Status effects
+    STATUS_EFFECTS,
+    STATUS_EFFECT,
+    TYPE,
+    DURATION,
+    ON_APPLY,
+    ON_TICK,
+    ON_EXPIRE,
+
+    // Items
+    ITEMS,
+    ITEM,
+    PASSIVE,
+    BEHAVIOR,
+    RANGE,
+    MANA_COST,
+    COOLDOWN,
+    DAMAGE_TYPE,
+
+    // Creeps
+    CREEPS,
+    CREEP,
+
+    // Targets
+    SELF,
+    TARGET,
+    CASTER,
+
+    // End of file
+    EOF
 }
 
 fun classifyLexeme(lexeme: String): TokenType {
@@ -75,52 +129,10 @@ fun classifyLexeme(lexeme: String): TokenType {
         "|>" -> TokenType.PIPE_GREATER
 
         "GAME" -> TokenType.GAME
-        "Heroes" -> TokenType.HEROES
-        "Arena" -> TokenType.ARENA
-        "StatusEffects" -> TokenType.STATUS_EFFECTS
-        "Items" -> TokenType.ITEMS
-        "Creeps" -> TokenType.CREEPS
-        "Functions" -> TokenType.FUNCTIONS
         "import" -> TokenType.IMPORT
-        "const" -> TokenType.CONST
+
         "set" -> TokenType.SET
-
-        "hero" -> TokenType.HERO
-        "heroStat" -> TokenType.HERO_STAT
-        "scaling" -> TokenType.SCALING
-        "abilities" -> TokenType.ABILITIES
-
-        "ability" -> TokenType.ABILITY
-        "type" -> TokenType.TYPE
-        "cooldown" -> TokenType.COOLDOWN
-        "mana_cost" -> TokenType.MANA_COST
-        "range" -> TokenType.RANGE
-        "damage_type" -> TokenType.DAMAGE_TYPE
-        "behavior" -> TokenType.BEHAVIOR
-
-        "team" -> TokenType.TEAM
-        "turret" -> TokenType.TURRET
-        "turrets" -> TokenType.TURRETS
-        "core" -> TokenType.CORE
-
-        "statusEffect" -> TokenType.STATUS_EFFECT
-        "duration" -> TokenType.DURATION
-        "on_apply" -> TokenType.ON_APPLY
-        "on_tick" -> TokenType.ON_TICK
-        "on_expire" -> TokenType.ON_EXPIRE
-
-        "item" -> TokenType.ITEM
-        "effect" -> TokenType.EFFECT
-        "passive" -> TokenType.PASSIVE
-
-        "creep" -> TokenType.CREEP
-
-        "apply" -> TokenType.APPLY
-        "to" -> TokenType.TO
-        "self" -> TokenType.SELF
-        "target" -> TokenType.TARGET
-        "caster" -> TokenType.CASTER
-        "function" -> TokenType.FUNCTION
+        "const" -> TokenType.CONST
 
         "if" -> TokenType.IF
         "else" -> TokenType.ELSE
@@ -132,13 +144,65 @@ fun classifyLexeme(lexeme: String): TokenType {
         "and" -> TokenType.AND
         "or" -> TokenType.OR
 
+        "apply" -> TokenType.APPLY
+        "to" -> TokenType.TO
+
+        // Game blocks
+        "Heroes" -> TokenType.HEROES
+        "Arena" -> TokenType.ARENA
+        "StatusEffects" -> TokenType.STATUS_EFFECTS
+        "Items" -> TokenType.ITEMS
+        "Creeps" -> TokenType.CREEPS
+        "Functions" -> TokenType.FUNCTIONS
+
+        // Hero system
+        "hero" -> TokenType.HERO
+        "heroStat" -> TokenType.HERO_STAT
+        "abilities" -> TokenType.ABILITIES
+        "ability" -> TokenType.ABILITY
+
+        "type" -> TokenType.TYPE
+        "cooldown" -> TokenType.COOLDOWN
+        "mana_cost" -> TokenType.MANA_COST
+        "range" -> TokenType.RANGE
+        "damage_type" -> TokenType.DAMAGE_TYPE
+        "behavior" -> TokenType.BEHAVIOR
+
+        // Arena system
+        "team" -> TokenType.TEAM
+        "turret" -> TokenType.TURRET
+        "turrets" -> TokenType.TURRETS
+        "core" -> TokenType.CORE
+
+        // Status effects
+        "statusEffect" -> TokenType.STATUS_EFFECT
+        "duration" -> TokenType.DURATION
+        "on_apply" -> TokenType.ON_APPLY
+        "on_tick" -> TokenType.ON_TICK
+        "on_expire" -> TokenType.ON_EXPIRE
+
+        // Items
+        "item" -> TokenType.ITEM
+        "passive" -> TokenType.PASSIVE
+
+        // Creeps
+        "creep" -> TokenType.CREEP
+
+        // Targets
+        "self" -> TokenType.SELF
+        "target" -> TokenType.TARGET
+        "caster" -> TokenType.CASTER
+
+        // Functions
+        "function" -> TokenType.FUNCTION
+
         else -> when {
             lexeme.matches(Regex("^[0-9]+%$")) -> TokenType.PERCENTAGE
             lexeme.matches(Regex("^[0-9]+s$")) -> TokenType.TIME
             lexeme.matches(Regex("^[0-9]+(\\.[0-9]+)?$")) -> TokenType.NUMBER
             lexeme.matches(Regex("^\".*\"$")) -> TokenType.STRING
             lexeme.matches(Regex("^[a-zA-Z_][a-zA-Z0-9_]*$")) -> TokenType.IDENTIFIER
-            else -> TokenType.INVALID
+            else -> TokenType.IDENTIFIER // no INVALID token type
         }
     }
 }

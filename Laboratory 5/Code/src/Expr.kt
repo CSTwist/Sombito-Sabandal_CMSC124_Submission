@@ -1,16 +1,56 @@
 // Expr.kt
-sealed interface Expr {
-    data class Literal(val value: Any?) : Expr
-    data class Variable(val name: Token) : Expr
-    data class Binary(val left: Expr, val operator: Token, val right: Expr) : Expr
-    data class Grouping(val expression: Expr) : Expr
-    data class FunctionCallExpr(val call: FunctionCall) : Expr
-    data class Percentage(val value: Double) : Expr
-    data class Time(val seconds: Int) : Expr
+//
+// All expression types for the DSL.
+// Updated to fully match the Parser, Evaluator, and AstPrinter.
+// No redesign — only corrections and consistency improvements.
+//
 
-    // Logical expressions: condition and condition, condition or condition
-    data class Logical(val left: Expr, val operator: Token, val right: Expr) : Expr
+sealed class Expr {
 
-    // Unary expressions: !is_dead, -damage
-    data class Unary(val operator: Token, val right: Expr) : Expr
+    // -----------------------------
+    // LITERALS
+    // -----------------------------
+    data class Literal(val value: Any?) : Expr()
+
+    // Example: 50%  → stored as Expr.Percentage(50.0)
+    data class Percentage(val value: Double) : Expr()
+
+    // Example: 5s → Expr.Time(5)
+    data class Time(val seconds: Int) : Expr()
+
+    // -----------------------------
+    // VARIABLES
+    // -----------------------------
+    data class Variable(val name: Token) : Expr()
+
+    // -----------------------------
+    // GROUPING
+    // -----------------------------
+    data class Grouping(val expression: Expr) : Expr()
+
+    // -----------------------------
+    // UNARY
+    // -----------------------------
+    data class Unary(val operator: Token, val right: Expr) : Expr()
+
+    // -----------------------------
+    // BINARY
+    // Includes: + - * / comparisons == !=
+    // Also supports pipeline operator |>
+    // -----------------------------
+    data class Binary(val left: Expr, val operator: Token, val right: Expr) : Expr()
+
+    // -----------------------------
+    // LOGICAL EXPRESSIONS
+    // For AND / OR
+    // -----------------------------
+    data class Logical(val left: Expr, val operator: Token, val right: Expr) : Expr()
+
+    // -----------------------------
+    // FUNCTION CALL EXPRESSION
+    //
+    // Parser wraps FunctionCall in this class:
+    // Expr.FunctionCallExpr(FunctionCall)
+    // -----------------------------
+    data class FunctionCallExpr(val call: FunctionCall) : Expr()
 }
