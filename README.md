@@ -354,34 +354,36 @@ game_file       ::= { import_stmt } "GAME" IDENTIFIER game_body ;
 
 import_stmt     ::= "import" IDENTIFIER ";" ;
 
-game_body       ::= "{" { top_level_decl | section } "}" ;
+/* Variable Declarations (Allowed at top level and inside section blocks) */
+variable_decl   ::= "set" IDENTIFIER "=" expression ";"
+| IDENTIFIER "=" expression ";" ;
 
-top_level_decl  ::= "set" IDENTIFIER "=" expression ";" ;
+/* Game Body */
+game_body       ::= "{" { variable_decl | section } "}" ;
 
 section         ::= heroes_section
-                 | arena_section
-                 | status_effects_section
-                 | items_section
-                 | creeps_section
-                 | functions_section ;
-
+| arena_section
+| status_effects_section
+| items_section
+| creeps_section
+| functions_section ;
 
 /* --- Sections --- */
 
 Heroes:
 
-heroes_section  ::= "Heroes" "{" { hero_def } "}" ;
+heroes_section  ::= "Heroes" "{" { hero_def | variable_decl } "}" ;
 
 hero_def        ::= "hero" IDENTIFIER "{" hero_body "}" ;
 
 hero_body       ::= { hero_statement } ;
 
 hero_statement  ::= "set" IDENTIFIER "=" expression ";"
-                 | "heroStat" ":" "{" { stat_entry } "}"
-                 | "abilities" ":" "{" { ability_def } "}" ;
+| IDENTIFIER "=" expression ";"
+| "heroStat" ":" "{" { stat_entry } "}"
+| "abilities" ":" "{" { ability_def } "}" ;
 
 stat_entry      ::= IDENTIFIER ":" expression ;
-
 
 Abilities:
 
@@ -390,24 +392,21 @@ ability_def     ::= "ability" IDENTIFIER "{" ability_body "}" ;
 ability_body    ::= { ability_field } ;
 
 ability_field   ::= "type" ":" IDENTIFIER
-                 | "cooldown" ":" expression
-                 | "mana_cost" ":" expression
-                 | "range" ":" expression     // (fixed) Added to match README examples
-                 | "damage_type" ":" IDENTIFIER
-                 | behavior_field ;
+| "cooldown" ":" expression
+| "mana_cost" ":" expression
+| "range" ":" expression
+| "damage_type" ":" IDENTIFIER
+| behavior_field ;
 
 behavior_field  ::= "behavior" ":" ( pipeline_expr | script_block ) ;
 
-
-
-
 Arena:
 
-arena_section   ::= "Arena" "{" { team_def | core_def | turret_def } "}" ;
+arena_section   ::= "Arena" "{" { team_def | core_def | turret_def | variable_decl } "}" ;
 
 team_def        ::= "team" IDENTIFIER "{" team_body "}" ;
 
-team_body       ::= [ core_ref ] [ turret_block ] ;   // (fixed missing bracket)
+team_body       ::= [ core_ref ] [ turret_block ] ;
 
 core_ref        ::= "core" IDENTIFIER ;
 
@@ -419,31 +418,27 @@ core_def        ::= "core" IDENTIFIER "{" stats_body "}" ;
 
 stats_body      ::= { stat_entry } ;
 
-
-
 Status Effects:
 
 status_effects_section
-                 ::= "StatusEffects" "{" { status_effect_def } "}" ;
+::= "StatusEffects" "{" { status_effect_def | variable_decl } "}" ;
 
 status_effect_def
-                 ::= "statusEffect" IDENTIFIER "{" status_effect_body "}" ;
+::= "statusEffect" IDENTIFIER "{" status_effect_body "}" ;
 
 status_effect_body
-                 ::= { status_effect_field } ;
+::= { status_effect_field } ;
 
 status_effect_field
-                 ::= "type" ":" IDENTIFIER
-                 | "duration" ":" expression
-                 | "on_apply" ":" script_block
-                 | "on_tick" ":" script_block
-                 | "on_expire" ":" script_block ;
-
-
+::= "type" ":" IDENTIFIER
+| "duration" ":" expression
+| "on_apply" ":" script_block
+| "on_tick" ":" script_block
+| "on_expire" ":" script_block ;
 
 Items:
 
-items_section   ::= "Items" "{" { item_def } "}" ;
+items_section   ::= "Items" "{" { item_def | variable_decl } "}" ;
 
 item_def        ::= "item" IDENTIFIER "{" item_body "}" ;
 
@@ -453,57 +448,49 @@ item_field      ::= IDENTIFIER ":" expression ;
 
 passive_block   ::= "passive" ":" "{" "behavior" ":" pipeline_expr "}" ;
 
-
-
 Creeps:
 
-creeps_section  ::= "Creeps" "{" { creep_def } "}" ;
+creeps_section  ::= "Creeps" "{" { creep_def | variable_decl } "}" ;
 
 creep_def       ::= "creep" IDENTIFIER "{" stats_body "}" ;
-
-
-
 
 Functions:
 
 functions_section
-                 ::= "Functions" "{" { function_def } "}" ;
+::= "Functions" "{" { function_def | variable_decl } "}" ;
 
 function_def    ::= "function" IDENTIFIER "(" [ param_list ] ")"
-                    [ ":" type_expr ]
-                    script_block ;
+[ ":" type_expr ]
+script_block ;
 
 param_list      ::= param { "," param } ;
 
 param           ::= type_expr IDENTIFIER ;
-
 
 /* --- Logic & Statements --- */
 
 script_block    ::= "{" { statement } "}" ;
 
 statement       ::= if_stmt
-                 | loop_stmt
-                 | return_stmt
-                 | const_decl
-                 | set_stmt
-                 | assignment_stmt
-                 | apply_stmt
-                 | stat_entry_stmt
-                 | expression_stmt ;
-
+| loop_stmt
+| return_stmt
+| const_decl
+| set_stmt
+| assignment_stmt
+| apply_stmt
+| stat_entry_stmt
+| expression_stmt ;
 
 Conditional and loops:
 
 if_stmt         ::= "if" "(" expression ")" script_block
-                    [ "else" ( script_block | if_stmt ) ] ;
+[ "else" ( script_block | if_stmt ) ] ;
 
 loop_stmt       ::= while_stmt | for_stmt ;
 
 while_stmt      ::= "while" "(" expression ")" script_block ;
 
 for_stmt        ::= "for" "(" IDENTIFIER "in" expression ")" script_block ;
-
 
 Statements:
 
@@ -517,10 +504,9 @@ assignment_stmt ::= IDENTIFIER "=" expression ";" ;
 
 apply_stmt      ::= "apply" function_call "to" target_expr ";" ;
 
-stat_entry_stmt ::= IDENTIFIER ":" expression ;
+stat_entry_stmt ::= IDENTIFIER ":" expression ";" ;
 
 expression_stmt ::= expression ";" ;
-
 
 /* --- Expressions --- */
 
@@ -537,16 +523,15 @@ unary           ::= ( "!" | "-" ) unary | call ;
 call            ::= primary [ "(" [ argument_list ] ")" ] ;
 
 primary         ::= NUMBER
-                 | STRING
-                 | IDENTIFIER
-                 | PERCENTAGE
-                 | TIME
-                 | "(" expression ")" ;
+| STRING
+| IDENTIFIER
+| PERCENTAGE
+| TIME
+| "(" expression ")" ;
 
 pipeline_expr   ::= function_call { "|>" function_call } ;
 
 Function Call:
-
 
 function_call   ::= IDENTIFIER "(" [ argument_list ] ")" ;
 
@@ -556,7 +541,7 @@ argument        ::= [ IDENTIFIER ":" ] expression ;
 
 target_expr     ::= "self" | "target" | "caster" | IDENTIFIER ;
 
-type_expr      ::= IDENTIFIER;   // Number, Boolean, Entity, etc.
+type_expr       ::= IDENTIFIER;
 
 ```
 
